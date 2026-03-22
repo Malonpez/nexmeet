@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexMeet — Video Conferencias</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0f14; --surface:#161a22; --surface2:#1e2330; --border:#2a3040;
+  --accent:#00e5c3; --accent2:#0099ff; --danger:#ff4757; --warn:#ffa502;
+  --text:#e8eaf0; --muted:#6b7590; --video-bg:#0a0c10;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;}
+
+/* ── LOBBY ── */
+#lobby{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:2rem;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,#0d2035 0%,var(--bg) 70%);}
+.logo{font-family:'Syne',sans-serif;font-size:2.8rem;font-weight:800;letter-spacing:-0.03em;margin-bottom:.3rem;}
+.logo span{color:var(--accent);}
+.tagline{color:var(--muted);font-size:.95rem;margin-bottom:3rem;font-weight:300;}
+.lobby-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2.5rem;
+  width:100%;max-width:440px;box-shadow:0 24px 60px rgba(0,0,0,.5);}
+.lobby-card h2{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:1.5rem;}
+.field{margin-bottom:1.2rem;}
+.field label{display:block;font-size:.8rem;color:var(--muted);font-weight:500;margin-bottom:.45rem;
+  letter-spacing:.06em;text-transform:uppercase;}
+.field input,.field select{width:100%;padding:.75rem 1rem;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;outline:none;transition:border-color .2s;}
+.field input:focus,.field select:focus{border-color:var(--accent);}
+.field input::placeholder{color:var(--muted);}
+.field select option{background:var(--surface2);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.5rem;
+  border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:500;transition:all .2s;}
+.btn-primary{background:var(--accent);color:#000;width:100%;margin-top:.5rem;}
+.btn-primary:hover{background:#00ffda;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,229,195,.35);}
+.btn-join{background:var(--accent2);color:#fff;width:100%;margin-top:.5rem;}
+.btn-join:hover{background:#33afff;transform:translateY(-1px);}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);width:100%;margin-top:.5rem;}
+.btn-secondary:hover{border-color:var(--accent2);color:var(--accent2);}
+.divider{display:flex;align-items:center;gap:1rem;margin:1.5rem 0;color:var(--muted);font-size:.8rem;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.join-row{display:flex;gap:.6rem;}
+.join-row input{flex:1;}
+.join-row .btn{padding:.75rem 1.2rem;white-space:nowrap;width:auto;margin-top:0;background:var(--accent2);color:#fff;}
+#lobbyStatus{margin-top:1rem;font-size:.85rem;color:var(--muted);text-align:center;min-height:1.2em;}
+#lobbyStatus.err{color:var(--danger);}
+
+/* ── INVITE BANNER ── */
+.invite-banner{display:none;align-items:center;gap:.75rem;
+  background:rgba(0,229,195,.08);border:1px solid rgba(0,229,195,.25);
+  border-radius:10px;padding:.85rem 1rem;margin-bottom:1.5rem;}
+.invite-banner.show{display:flex;}
+.invite-icon{font-size:1.5rem;flex-shrink:0;}
+.invite-text{font-size:.85rem;color:var(--muted);line-height:1.5;}
+.invite-text strong{color:var(--accent);}
+
+/* ── EXPIRED SCREEN ── */
+#expiredScreen{display:none;flex-direction:column;align-items:center;justify-content:center;
+  height:100vh;gap:1.5rem;padding:2rem;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,#1f0d0d 0%,var(--bg) 70%);}
+#expiredScreen .exp-icon{font-size:4rem;}
+#expiredScreen h2{font-family:'Syne',sans-serif;font-size:1.5rem;color:var(--danger);}
+#expiredScreen p{color:var(--muted);text-align:center;max-width:340px;line-height:1.6;}
+
+/* ── WAITING ROOM (guest side) ── */
+#waitingRoom{display:none;flex-direction:column;align-items:center;justify-content:center;
+  height:100vh;gap:1.5rem;padding:2rem;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,#0d2035 0%,var(--bg) 70%);}
+.waiting-spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#waitingRoom h2{font-family:'Syne',sans-serif;font-size:1.4rem;}
+#waitingRoom p{color:var(--muted);font-size:.9rem;text-align:center;max-width:320px;line-height:1.6;}
+.waiting-name-badge{background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:.65rem 1.25rem;font-size:.9rem;color:var(--accent);font-weight:600;}
+
+/* ── REJECTED SCREEN ── */
+#rejectedScreen{display:none;flex-direction:column;align-items:center;justify-content:center;
+  height:100vh;gap:1.5rem;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,#1f0d0d 0%,var(--bg) 70%);}
+#rejectedScreen .rej-icon{font-size:3.5rem;}
+#rejectedScreen h2{font-family:'Syne',sans-serif;font-size:1.4rem;color:var(--danger);}
+#rejectedScreen p{color:var(--muted);font-size:.9rem;}
+
+/* ── MEETING ── */
+#meeting{display:none;flex-direction:column;height:100vh;}
+.top-bar{display:flex;align-items:center;padding:.75rem 1.25rem;background:var(--surface);
+  border-bottom:1px solid var(--border);gap:1rem;flex-shrink:0;}
+.top-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;}
+.top-brand span{color:var(--accent);}
+.room-badge{display:flex;align-items:center;gap:.5rem;background:var(--surface2);
+  border:1px solid var(--border);border-radius:6px;padding:.3rem .75rem;font-size:.82rem;color:var(--muted);}
+.room-badge strong{color:var(--text);font-family:monospace;font-size:.78rem;}
+.copy-btn{background:none;border:none;cursor:pointer;color:var(--accent);padding:0 .2rem;font-size:.82rem;transition:color .15s;}
+.copy-btn:hover{color:#fff;}
+.spacer{flex:1;}
+.top-timer{font-family:monospace;font-size:.9rem;color:var(--muted);}
+.participants-count{font-size:.82rem;color:var(--muted);display:flex;align-items:center;gap:.35rem;}
+.dot-live{width:7px;height:7px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── WAITING ROOM QUEUE (host side) ── */
+#waitingQueue{position:fixed;top:70px;right:16px;z-index:100;display:flex;flex-direction:column;gap:.6rem;max-width:320px;}
+.knock-card{background:var(--surface);border:1px solid var(--warn);border-radius:12px;
+  padding:1rem 1.15rem;box-shadow:0 8px 30px rgba(0,0,0,.5);animation:slideIn .3s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.knock-card .kc-header{display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem;}
+.knock-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));
+  display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;color:#000;font-size:.9rem;}
+.knock-name{font-weight:600;font-size:.9rem;}
+.knock-sub{font-size:.75rem;color:var(--muted);}
+.knock-actions{display:flex;gap:.5rem;}
+.btn-admit{flex:1;background:var(--accent);color:#000;border:none;border-radius:7px;padding:.5rem;
+  cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.82rem;transition:all .2s;}
+.btn-admit:hover{background:#00ffda;}
+.btn-reject{flex:1;background:rgba(255,71,87,.15);color:var(--danger);border:1px solid var(--danger);
+  border-radius:7px;padding:.5rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.82rem;transition:all .2s;}
+.btn-reject:hover{background:rgba(255,71,87,.3);}
+
+/* ── MEETING BODY ── */
+.meeting-body{display:flex;flex:1;overflow:hidden;}
+.video-area{flex:1;display:flex;flex-direction:column;padding:1rem;overflow:hidden;background:var(--video-bg);position:relative;}
+.video-grid{display:grid;flex:1;gap:.75rem;overflow:hidden;align-items:center;justify-items:center;}
+.video-wrap{position:relative;width:100%;height:100%;background:var(--surface);border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+.video-wrap video{width:100%;height:100%;object-fit:cover;display:block;}
+.video-label{position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+  padding:.25rem .65rem;border-radius:5px;font-size:.78rem;font-weight:500;color:#fff;}
+.video-off-overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  background:var(--surface2);flex-direction:column;gap:.5rem;}
+.video-off-overlay.show{display:flex;}
+.avatar-circle{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));
+  display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700;color:#000;}
+
+/* Waiting state overlay */
+.waiting-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;
+  justify-content:center;gap:1.25rem;background:var(--video-bg);z-index:10;}
+.waiting-overlay.show{display:flex;}
+.waiting-overlay h3{font-family:'Syne',sans-serif;font-size:1.3rem;}
+.share-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;max-width:480px;width:90%;}
+.share-box p{color:var(--muted);font-size:.85rem;margin-bottom:.75rem;}
+
+/* Expiry selector */
+.expiry-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.85rem;}
+.expiry-row label{font-size:.8rem;color:var(--muted);white-space:nowrap;}
+.expiry-row select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+  color:var(--text);padding:.45rem .75rem;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;}
+.expiry-row select:focus{border-color:var(--accent);}
+.share-link-display{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:.65rem .85rem;font-size:.72rem;font-family:monospace;color:var(--accent);word-break:break-all;line-height:1.5;margin-bottom:.85rem;}
+.share-actions{display:flex;gap:.6rem;flex-wrap:wrap;}
+.share-actions .btn{font-size:.82rem;padding:.55rem 1rem;width:auto;}
+.btn-copy-link{background:var(--accent);color:#000;}
+.btn-copy-link:hover{background:#00ffda;}
+.btn-copy-code{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-copy-code:hover{border-color:var(--accent);color:var(--accent);}
+.expiry-badge{font-size:.75rem;color:var(--warn);margin-top:.5rem;display:flex;align-items:center;gap:.35rem;}
+
+/* ── CHAT ── */
+.chat-panel{width:0;overflow:hidden;transition:width .3s ease;background:var(--surface);border-left:1px solid transparent;flex-shrink:0;}
+.chat-panel.open{width:300px;border-left-color:var(--border);}
+.chat-inner{width:300px;height:100%;display:flex;flex-direction:column;}
+.chat-header{padding:1rem 1.25rem;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;}
+.chat-messages{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.75rem;}
+.chat-messages::-webkit-scrollbar{width:4px;}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.chat-msg .cm-name{color:var(--accent);font-weight:600;margin-bottom:.15rem;font-size:.78rem;}
+.chat-msg .cm-name.me{color:var(--accent2);}
+.chat-msg .cm-text{color:var(--text);line-height:1.45;word-break:break-word;font-size:.85rem;}
+.chat-msg .cm-time{color:var(--muted);font-size:.72rem;margin-top:.1rem;}
+.chat-input-row{display:flex;gap:.5rem;padding:.75rem;border-top:1px solid var(--border);}
+.chat-input-row input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+  padding:.55rem .75rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;}
+.chat-input-row input:focus{border-color:var(--accent);}
+.chat-send{background:var(--accent);border:none;border-radius:6px;width:34px;height:34px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.chat-send:hover{background:#00ffda;}
+.chat-send svg{width:15px;height:15px;fill:#000;}
+
+/* ── CONTROLS ── */
+.controls-bar{display:flex;align-items:center;justify-content:center;gap:.75rem;
+  padding:1rem 1.5rem;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
+.ctrl-btn{display:flex;flex-direction:column;align-items:center;gap:.3rem;background:var(--surface2);
+  border:1px solid var(--border);border-radius:12px;padding:.65rem 1rem;cursor:pointer;transition:all .2s;min-width:56px;}
+.ctrl-btn:hover{background:var(--border);}
+.ctrl-btn.active{background:var(--accent);border-color:var(--accent);}
+.ctrl-btn.active .ctrl-icon,.ctrl-btn.active .ctrl-label{color:#000;}
+.ctrl-btn.off{background:rgba(255,71,87,.15);border-color:var(--danger);}
+.ctrl-btn.off .ctrl-icon{color:var(--danger);}
+.ctrl-icon{font-size:1.25rem;line-height:1;}
+.ctrl-label{font-size:.68rem;color:var(--muted);font-weight:500;letter-spacing:.03em;}
+.ctrl-btn:hover .ctrl-label{color:var(--text);}
+.ctrl-divider{width:1px;height:48px;background:var(--border);margin:0 .25rem;}
+.leave-btn{background:var(--danger);border:none;border-radius:12px;padding:.65rem 1.5rem;cursor:pointer;
+  color:#fff;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.85rem;transition:all .2s;
+  display:flex;align-items:center;gap:.5rem;}
+.leave-btn:hover{background:#ff6b78;transform:translateY(-1px);}
+.badge-count{background:var(--accent2);color:#fff;border-radius:10px;padding:.05rem .4rem;font-size:.65rem;font-weight:700;line-height:1.4;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--surface2);
+  border:1px solid var(--border);border-radius:8px;padding:.65rem 1.2rem;font-size:.85rem;
+  color:var(--text);opacity:0;pointer-events:none;transition:opacity .3s;z-index:9999;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+/* ── GRID ── */
+.grid-1{grid-template-columns:1fr;}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+.grid-3{grid-template-columns:repeat(2,1fr);}
+.grid-4{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);}
+.grid-many{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
+</style>
+</head>
+<body>
+
+<!-- ═══ PANTALLA: LINK EXPIRADO ═══ -->
+<div id="expiredScreen">
+  <div class="exp-icon">⏰</div>
+  <h2>Este link ha expirado</h2>
+  <p>El enlace de invitación ya no es válido. Solicita al organizador un nuevo link de acceso.</p>
+</div>
+
+<!-- ═══ PANTALLA: SALA DE ESPERA (invitado) ═══ -->
+<div id="waitingRoom">
+  <div class="waiting-spinner"></div>
+  <h2>Sala de espera</h2>
+  <p>El organizador de la reunión tiene que admitirte.<br>Por favor espera un momento.</p>
+  <div class="waiting-name-badge" id="waitingNameBadge">…</div>
+  <p style="font-size:.78rem;color:var(--muted);">Esta ventana se actualizará automáticamente cuando seas admitido.</p>
+</div>
+
+<!-- ═══ PANTALLA: RECHAZADO ═══ -->
+<div id="rejectedScreen">
+  <div class="rej-icon">🚫</div>
+  <h2>Acceso denegado</h2>
+  <p style="color:var(--muted)">El organizador no admitió tu ingreso a esta reunión.</p>
+</div>
+
+<!-- ═══ LOBBY ═══ -->
+<div id="lobby">
+  <div class="logo">Nex<span>Meet</span></div>
+  <div class="tagline">Videoconferencias privadas · para tu empresa</div>
+  <div class="lobby-card">
+
+    <div class="invite-banner" id="inviteBanner">
+      <div class="invite-icon">🔗</div>
+      <div class="invite-text">
+        Fuiste invitado a una reunión.<br>
+        Ingresa tu nombre para solicitar acceso.<br>
+        <strong id="inviteExpiry"></strong>
+      </div>
+    </div>
+
+    <h2 id="lobbyTitle">Crear o unirse a una sala</h2>
+
+    <div class="field">
+      <label>Tu nombre</label>
+      <input id="nameInput" placeholder="¿Cómo te llaman?" maxlength="30" />
+    </div>
+
+    <button class="btn btn-join" id="btnMain" onclick="mainAction()">
+      <span id="btnMainText">▶ Solicitar acceso</span>
+    </button>
+
+    <div id="createSection">
+      <div class="divider">o crea una sala nueva</div>
+      <button class="btn btn-primary" onclick="createRoom()">＋ &nbsp;Nueva sala</button>
+    </div>
+
+    <div id="manualSection" style="display:none">
+      <div class="divider">o ingresa un ID manualmente</div>
+      <div class="join-row">
+        <input id="roomCodeInput" placeholder="Pegar ID…" />
+        <button class="btn" onclick="joinManual()">Entrar</button>
+      </div>
+    </div>
+
+    <div id="lobbyStatus">Iniciando…</div>
+  </div>
+</div>
+
+<!-- ═══ MEETING ═══ -->
+<div id="meeting">
+
+  <!-- Cola de espera — solo visible para el host -->
+  <div id="waitingQueue"></div>
+
+  <div class="top-bar">
+    <div class="top-brand">Nex<span>Meet</span></div>
+    <div class="room-badge">
+      <span>Sala:</span>
+      <strong id="displayRoomCode">…</strong>
+      <button class="copy-btn" onclick="copyInviteLink()" title="Copiar link">⎘ Invitar</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="participants-count"><span class="dot-live"></span><span id="pCount">1</span> participante(s)</div>
+    <div class="top-timer" id="timerDisplay">00:00</div>
+  </div>
+
+  <div class="meeting-body">
+    <div class="video-area">
+      <div class="video-grid grid-1" id="videoGrid"></div>
+      <!-- Overlay de espera (host sin participantes) -->
+      <div class="waiting-overlay" id="waitingOverlay">
+        <h3>Sala lista — esperando participantes 🎉</h3>
+        <div class="share-box">
+          <p>Genera un link de invitación con tiempo de expiración:</p>
+          <div class="expiry-row">
+            <label>⏱ Válido por:</label>
+            <select id="expirySelect" onchange="regenerateLink()">
+              <option value="3600000">1 hora</option>
+              <option value="28800000" selected>8 horas</option>
+              <option value="86400000">24 horas</option>
+              <option value="604800000">7 días</option>
+            </select>
+          </div>
+          <div class="share-link-display" id="shareLinkDisplay">…</div>
+          <div class="expiry-badge" id="expiryBadge">⚠️ Este link expirará — genera uno nuevo cuando sea necesario</div>
+          <div class="share-actions" style="margin-top:.85rem">
+            <button class="btn btn-copy-link" onclick="copyInviteLink()">📋 Copiar link</button>
+            <button class="btn btn-copy-code" onclick="regenerateLink()">🔄 Nuevo link</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-panel" id="chatPanel">
+      <div class="chat-inner">
+        <div class="chat-header">💬 Chat de la reunión</div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-row">
+          <input id="chatInput" placeholder="Mensaje…" onkeydown="if(event.key==='Enter')sendChat()" />
+          <button class="chat-send" onclick="sendChat()">
+            <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls-bar">
+    <button class="ctrl-btn" id="btnMic" onclick="toggleMic()"><div class="ctrl-icon">🎤</div><div class="ctrl-label">Micro</div></button>
+    <button class="ctrl-btn" id="btnCam" onclick="toggleCam()"><div class="ctrl-icon">📷</div><div class="ctrl-label">Cámara</div></button>
+    <button class="ctrl-btn" id="btnScreen" onclick="toggleScreen()"><div class="ctrl-icon">🖥️</div><div class="ctrl-label">Pantalla</div></button>
+    <div class="ctrl-divider"></div>
+    <button class="ctrl-btn" id="btnChat" onclick="toggleChat()">
+      <div class="ctrl-icon">💬</div>
+      <div class="ctrl-label">Chat <span class="badge-count" id="chatBadge" style="display:none">0</span></div>
+    </button>
+    <div class="ctrl-divider"></div>
+    <button class="leave-btn" onclick="leaveRoom()">📞 Salir</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
+let myPeer=null, myStream=null, screenStream=null;
+let myName='', myPeerId='', roomId='', isHost=false;
+let isMuted=false, isVideoOff=false, isScreenSharing=false, isChatOpen=false;
+let connections=new Map(); // peerId → {call, conn, name, status: 'waiting'|'admitted'}
+let meetingSeconds=0, timerInt=null, unreadChat=0;
+let currentInviteLink='';
+
+// ══════════════════════════════════════════
+//  URL / LINK HELPERS
+// ══════════════════════════════════════════
+// Link format:  page.html#PEERID|EXPIRY_TIMESTAMP
+// Example:      nexmeet.html#abc-123-def|1700086400000
+
+function parseHash() {
+  const raw = decodeURIComponent(location.hash.replace('#','').trim());
+  if (!raw) return null;
+  const parts = raw.split('|');
+  if (parts.length !== 2) return null;
+  const [peerId, expiry] = parts;
+  if (!peerId || !expiry) return null;
+  return { peerId, expiry: parseInt(expiry, 10) };
+}
+
+function buildLink(peerId, durationMs) {
+  const expiry = Date.now() + durationMs;
+  const base = location.href.split('#')[0];
+  return `${base}#${peerId}|${expiry}`;
+}
+
+function formatExpiry(ms) {
+  const mins = Math.round(ms / 60000);
+  if (mins < 60) return `${mins} minuto(s)`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs} hora(s)`;
+  return `${Math.round(hrs/24)} día(s)`;
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+window.onload = () => {
+  const parsed = parseHash();
+
+  // ── Guest arrived via invite link ──
+  if (parsed) {
+    // Check expiry FIRST
+    if (Date.now() > parsed.expiry) {
+      show('expiredScreen'); return;
+    }
+    // Valid link — show join UI
+    document.getElementById('inviteBanner').classList.add('show');
+    const remaining = parsed.expiry - Date.now();
+    document.getElementById('inviteExpiry').textContent =
+      `⏱ Este link expira en ${formatExpiry(remaining)}`;
+    document.getElementById('lobbyTitle').textContent = 'Unirse a la reunión';
+    document.getElementById('btnMainText').textContent = '▶ Solicitar acceso';
+    document.getElementById('createSection').style.display = 'none';
+    document.getElementById('manualSection').style.display = 'none';
+
+  } else {
+    // ── Host mode ──
+    document.getElementById('btnMainText').textContent = '＋ Crear sala nueva';
+    document.getElementById('inviteBanner').style.display = 'none';
+    document.getElementById('createSection').style.display = 'none';
+    document.getElementById('btnMain').className = 'btn btn-primary';
+  }
+
+  document.getElementById('lobbyStatus').textContent = 'Conectando…';
+
+  myPeer = new Peer(undefined, {
+    // ── Si tienes servidor propio, reemplaza esto: ──
+    // host: 'peer.tuempresa.com.au', port: 443, key: 'nexmeet', secure: true,
+    config: { iceServers: [
+      {urls:'stun:stun.l.google.com:19302'},
+      {urls:'stun:stun1.l.google.com:19302'},
+      {urls:'stun:stun2.l.google.com:19302'}
+    ]}
+  });
+
+  myPeer.on('open', id => {
+    myPeerId = id;
+    document.getElementById('lobbyStatus').textContent = parsed
+      ? 'Listo. Ingresa tu nombre para solicitar acceso.'
+      : 'Listo. Ingresa tu nombre para comenzar.';
+    document.getElementById('nameInput').focus();
+  });
+
+  myPeer.on('error', e => {
+    document.getElementById('lobbyStatus').textContent = 'Error de red: ' + e.message;
+    document.getElementById('lobbyStatus').className = 'err';
+  });
+
+  // Incoming — solo el host recibe esto
+  myPeer.on('call', call => { call.answer(myStream); handleCall(call, null); });
+  myPeer.on('connection', conn => { setupDataConn(conn, false); });
+
+  document.getElementById('nameInput').onkeydown = e => { if(e.key==='Enter') mainAction(); };
+};
+
+// ══════════════════════════════════════════
+//  LOBBY ACTIONS
+// ══════════════════════════════════════════
+function mainAction() {
+  const parsed = parseHash();
+  parsed ? joinWithParsed(parsed) : createRoom();
+}
+
+async function createRoom() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) { showToast('Ingresa tu nombre'); return; }
+  myName = name; isHost = true; roomId = myPeerId;
+  await startMedia();
+  history.replaceState(null,'', location.pathname + location.search);
+  enterMeeting();
+  setWaiting(true);
+}
+
+async function joinWithParsed(parsed) {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) { showToast('Ingresa tu nombre'); return; }
+
+  // Double-check expiry at join time
+  if (Date.now() > parsed.expiry) { show('expiredScreen'); return; }
+
+  myName = name; isHost = false; roomId = parsed.peerId;
+  await startMedia();
+
+  // Show waiting room screen
+  hide('lobby');
+  document.getElementById('waitingNameBadge').textContent = myName;
+  show('waitingRoom');
+
+  // Connect data channel to host to knock
+  const conn = myPeer.connect(roomId, { metadata: { name: myName, action: 'knock' } });
+  connections.set(roomId, { call:null, conn, name:'Host', status:'waiting' });
+
+  conn.on('open', () => {
+    conn.send({ type:'knock', name: myName });
+  });
+
+  conn.on('data', d => {
+    if (d.type === 'admitted') {
+      hide('waitingRoom');
+      enterMeeting();
+      // Now call the host with video
+      const call = myPeer.call(roomId, myStream);
+      if (call) { handleCall(call,'Host'); connections.get(roomId).call = call; }
+      setupDataConn(conn, true);
+      conn.send({ type:'join', name: myName });
+    } else if (d.type === 'rejected') {
+      hide('waitingRoom');
+      show('rejectedScreen');
+      myStream?.getTracks().forEach(t=>t.stop());
+    } else {
+      // Normal data after admission
+      handleData(conn, d);
+    }
+  });
+
+  conn.on('error', () => showToast('No se pudo conectar con la sala.'));
+}
+
+function joinManual() {
+  const code = document.getElementById('roomCodeInput').value.trim();
+  if (!code) { showToast('Ingresa el ID de sala'); return; }
+  // Manual join: no expiry check — for host use
+  myName = document.getElementById('nameInput').value.trim() || 'Invitado';
+  isHost = false; roomId = code;
+  startMedia().then(() => {
+    hide('lobby'); show('waitingRoom');
+    document.getElementById('waitingNameBadge').textContent = myName;
+    const conn = myPeer.connect(roomId, {metadata:{name:myName,action:'knock'}});
+    connections.set(roomId,{call:null,conn,name:'Host',status:'waiting'});
+    conn.on('open',()=>conn.send({type:'knock',name:myName}));
+    conn.on('data',d=>{
+      if(d.type==='admitted'){hide('waitingRoom');enterMeeting();const call=myPeer.call(roomId,myStream);if(call){handleCall(call,'Host');connections.get(roomId).call=call;}setupDataConn(conn,true);conn.send({type:'join',name:myName});}
+      else if(d.type==='rejected'){hide('waitingRoom');show('rejectedScreen');myStream?.getTracks().forEach(t=>t.stop());}
+      else handleData(conn,d);
+    });
+  });
+}
+
+// ══════════════════════════════════════════
+//  MEDIA
+// ══════════════════════════════════════════
+async function startMedia() {
+  try { myStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true}); }
+  catch { try { myStream = await navigator.mediaDevices.getUserMedia({video:false,audio:true}); showToast('Solo audio — cámara no disponible'); }
+  catch { myStream = new MediaStream(); showToast('Sin acceso a cámara/micrófono'); } }
+}
+
+// ══════════════════════════════════════════
+//  ENTER MEETING
+// ══════════════════════════════════════════
+function enterMeeting() {
+  hide('lobby'); hide('waitingRoom');
+  document.getElementById('meeting').style.display='flex';
+  document.getElementById('displayRoomCode').textContent = roomId.slice(0,8)+'…';
+  addMyVideo();
+  startTimer();
+}
+
+// ══════════════════════════════════════════
+//  INVITE LINK (con expiración)
+// ══════════════════════════════════════════
+function regenerateLink() {
+  const ms = parseInt(document.getElementById('expirySelect').value);
+  currentInviteLink = buildLink(roomId, ms);
+  document.getElementById('shareLinkDisplay').textContent = currentInviteLink;
+  document.getElementById('expiryBadge').textContent =
+    `⏱ Este link expira en ${formatExpiry(ms)} a partir de ahora`;
+}
+
+function copyInviteLink() {
+  if (!currentInviteLink) regenerateLink();
+  navigator.clipboard.writeText(currentInviteLink)
+    .then(()=>showToast('Link de invitación copiado ✓'));
+}
+
+function setWaiting(show_) {
+  const ov = document.getElementById('waitingOverlay');
+  ov.classList.toggle('show', show_);
+  if (show_) regenerateLink();
+}
+
+// ══════════════════════════════════════════
+//  WAITING ROOM — HOST SIDE (admit/reject)
+// ══════════════════════════════════════════
+function showKnockCard(peerId, name) {
+  const queue = document.getElementById('waitingQueue');
+  // No duplicates
+  if (document.getElementById('knock-'+peerId)) return;
+
+  const card = document.createElement('div');
+  card.className = 'knock-card'; card.id = 'knock-'+peerId;
+  const initial = name[0]?.toUpperCase()||'?';
+  card.innerHTML = `
+    <div class="kc-header">
+      <div class="knock-avatar">${initial}</div>
+      <div><div class="knock-name">${esc(name)}</div>
+      <div class="knock-sub">Solicita unirse a la reunión</div></div>
+    </div>
+    <div class="knock-actions">
+      <button class="btn-admit" onclick="admitPeer('${peerId}')">✓ Admitir</button>
+      <button class="btn-reject" onclick="rejectPeer('${peerId}')">✕ Rechazar</button>
+    </div>`;
+  queue.appendChild(card);
+
+  // Beep / visual alert
+  showToast(`${name} está esperando ser admitido`);
+}
+
+function removeKnockCard(peerId) {
+  document.getElementById('knock-'+peerId)?.remove();
+}
+
+function admitPeer(peerId) {
+  removeKnockCard(peerId);
+  const p = connections.get(peerId);
+  if (p?.conn?.open) {
+    p.conn.send({type:'admitted'});
+    p.status = 'admitted';
+    // Tell other admitted peers about this new peer
+    broadcast({type:'new-peer', peerId, name:p.name}, peerId);
+    // Tell new peer about existing peers
+    const peerList = [...connections.entries()]
+      .filter(([id,pp])=> id!==peerId && pp.status==='admitted')
+      .map(([id,pp])=>({peerId:id,name:pp.name}));
+    p.conn.send({type:'peers-list', peers:peerList});
+    addSysMsg(`${p.name} fue admitido a la reunión`);
+  }
+}
+
+function rejectPeer(peerId) {
+  removeKnockCard(peerId);
+  const p = connections.get(peerId);
+  if (p?.conn?.open) {
+    p.conn.send({type:'rejected'});
+    try { p.conn.close(); } catch {}
+    connections.delete(peerId);
+  }
+}
+
+// ══════════════════════════════════════════
+//  DATA CONNECTIONS
+// ══════════════════════════════════════════
+function setupDataConn(conn, isOut) {
+  conn.on('data', d => handleData(conn, d));
+  conn.on('close', () => removePeer(conn.peer));
+}
+
+function handleData(conn, d) {
+  switch(d.type) {
+
+    case 'knock':
+      // Only host handles knocks
+      if (!isHost) return;
+      if (!connections.has(conn.peer))
+        connections.set(conn.peer,{call:null,conn,name:d.name,status:'waiting'});
+      else connections.get(conn.peer).name = d.name;
+      setupDataConn(conn, false);
+      showKnockCard(conn.peer, d.name);
+      break;
+
+    case 'join':
+      // Guest confirmed after admission
+      if (connections.has(conn.peer)) connections.get(conn.peer).name = d.name;
+      else connections.set(conn.peer,{call:null,conn,name:d.name,status:'admitted'});
+      const call = myPeer.call(conn.peer, myStream);
+      handleCall(call, d.name);
+      connections.get(conn.peer).call = call;
+      break;
+
+    case 'peers-list':
+      d.peers.forEach(({peerId,name}) => connectToPeer(peerId,name));
+      break;
+
+    case 'new-peer':
+      connectToPeer(d.peerId, d.name);
+      break;
+
+    case 'chat':
+      addChatMessage(d.name, d.message, false);
+      if (!isChatOpen) {
+        unreadChat++;
+        const b=document.getElementById('chatBadge');
+        b.style.display='inline'; b.textContent=unreadChat;
+      }
+      break;
+
+    case 'peer-left':
+      removePeer(d.peerId);
+      break;
+  }
+}
+
+function connectToPeer(peerId, name) {
+  if (peerId===myPeerId || connections.has(peerId)) return;
+  const conn = myPeer.connect(peerId, {metadata:{name:myName}});
+  connections.set(peerId,{call:null,conn,name,status:'admitted'});
+  conn.on('open',()=>{ conn.send({type:'join',name:myName}); setupDataConn(conn,true); });
+  conn.on('data',d=>handleData(conn,d));
+  const call = myPeer.call(peerId, myStream);
+  handleCall(call, name);
+  connections.get(peerId).call = call;
+}
+
+// ══════════════════════════════════════════
+//  VIDEO
+// ══════════════════════════════════════════
+function addMyVideo() {
+  const grid = document.getElementById('videoGrid'); grid.innerHTML='';
+  const wrap = mkWrap('my-video-wrap', myName+' (Tú)', true);
+  wrap.querySelector('video').srcObject = myStream;
+  grid.appendChild(wrap); updateGrid();
+}
+
+function mkWrap(id, label, muted) {
+  const w=document.createElement('div'); w.className='video-wrap'; w.id=id;
+  const v=document.createElement('video'); v.autoplay=true; v.playsInline=true; v.muted=!!muted;
+  const l=document.createElement('div'); l.className='video-label'; l.id='lbl-'+id; l.textContent=label;
+  const ov=document.createElement('div'); ov.className='video-off-overlay'; ov.id='ovl-'+id;
+  const init=(label.replace(/ \(Tú\)/,'')[0]||'?').toUpperCase();
+  ov.innerHTML=`<div class="avatar-circle">${init}</div><span style="color:var(--muted);font-size:.8rem">${label.replace(/ \(Tú\)/,'')}</span>`;
+  w.append(v,l,ov); return w;
+}
+
+function addRemoteVideo(peerId, stream, name) {
+  setWaiting(false);
+  const grid=document.getElementById('videoGrid');
+  let wrap=document.getElementById('peer-'+peerId);
+  if(!wrap){ wrap=mkWrap('peer-'+peerId,name,false); grid.appendChild(wrap); updateGrid(); updateParticipantCount(); addSysMsg(name+' se unió a la llamada'); }
+  wrap.querySelector('video').srcObject=stream;
+}
+
+function removePeer(peerId) {
+  removeKnockCard(peerId);
+  document.getElementById('peer-'+peerId)?.remove();
+  updateGrid(); updateParticipantCount();
+  const p=connections.get(peerId);
+  if(p){ addSysMsg((p.name||'Participante')+' salió de la llamada'); try{p.call?.close();p.conn?.close();}catch{} connections.delete(peerId); }
+  if(isHost && connections.size===0) setWaiting(true);
+}
+
+function handleCall(call, name) {
+  if(!connections.has(call.peer)) connections.set(call.peer,{call,conn:null,name:name||'Participante',status:'admitted'});
+  else connections.get(call.peer).call=call;
+  call.on('stream',s=>addRemoteVideo(call.peer,s,connections.get(call.peer)?.name||name||'Participante'));
+  call.on('close',()=>removePeer(call.peer));
+  call.on('error',()=>removePeer(call.peer));
+}
+
+// ══════════════════════════════════════════
+//  CONTROLS
+// ══════════════════════════════════════════
+function toggleMic(){
+  isMuted=!isMuted; myStream.getAudioTracks().forEach(t=>t.enabled=!isMuted);
+  const b=document.getElementById('btnMic'); b.classList.toggle('off',isMuted);
+  b.querySelector('.ctrl-icon').textContent=isMuted?'🔇':'🎤';
+  b.querySelector('.ctrl-label').textContent=isMuted?'Silenc.':'Micro';
+}
+function toggleCam(){
+  isVideoOff=!isVideoOff; myStream.getVideoTracks().forEach(t=>t.enabled=!isVideoOff);
+  const b=document.getElementById('btnCam'); b.classList.toggle('off',isVideoOff);
+  b.querySelector('.ctrl-icon').textContent=isVideoOff?'🚫':'📷';
+  b.querySelector('.ctrl-label').textContent=isVideoOff?'Sin cam.':'Cámara';
+  document.getElementById('ovl-my-video-wrap')?.classList.toggle('show',isVideoOff);
+}
+async function toggleScreen(){
+  if(!isScreenSharing){
+    try{
+      screenStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
+      const track=screenStream.getVideoTracks()[0];
+      connections.forEach(p=>{if(p.call?.peerConnection){const s=p.call.peerConnection.getSenders().find(s=>s.track?.kind==='video');if(s)s.replaceTrack(track);}});
+      document.querySelector('#my-video-wrap video').srcObject=screenStream;
+      track.onended=stopScreen; isScreenSharing=true;
+      const b=document.getElementById('btnScreen'); b.classList.add('active');
+      b.querySelector('.ctrl-icon').textContent='⏹️'; b.querySelector('.ctrl-label').textContent='Detener';
+      showToast('Compartiendo pantalla…');
+    }catch{showToast('No se pudo compartir pantalla');}
+  }else stopScreen();
+}
+function stopScreen(){
+  screenStream?.getTracks().forEach(t=>t.stop()); screenStream=null; isScreenSharing=false;
+  const cam=myStream.getVideoTracks()[0];
+  if(cam){connections.forEach(p=>{if(p.call?.peerConnection){const s=p.call.peerConnection.getSenders().find(s=>s.track?.kind==='video');if(s)s.replaceTrack(cam);}});document.querySelector('#my-video-wrap video').srcObject=myStream;}
+  const b=document.getElementById('btnScreen'); b.classList.remove('active');
+  b.querySelector('.ctrl-icon').textContent='🖥️'; b.querySelector('.ctrl-label').textContent='Pantalla';
+  showToast('Pantalla detenida');
+}
+function toggleChat(){
+  isChatOpen=!isChatOpen;
+  document.getElementById('chatPanel').classList.toggle('open',isChatOpen);
+  document.getElementById('btnChat').classList.toggle('active',isChatOpen);
+  if(isChatOpen){unreadChat=0;document.getElementById('chatBadge').style.display='none';document.getElementById('chatInput').focus();scrollChat();}
+}
+function leaveRoom(){
+  broadcast({type:'peer-left',peerId:myPeerId});
+  connections.forEach(p=>{try{p.call?.close();p.conn?.close();}catch{}});
+  connections.clear(); myStream?.getTracks().forEach(t=>t.stop()); screenStream?.getTracks().forEach(t=>t.stop());
+  clearInterval(timerInt);
+  history.replaceState(null,'',location.pathname+location.search);
+  location.reload();
+}
+
+// ══════════════════════════════════════════
+//  CHAT
+// ══════════════════════════════════════════
+function sendChat(){
+  const inp=document.getElementById('chatInput'); const msg=inp.value.trim(); if(!msg)return;
+  inp.value=''; broadcast({type:'chat',name:myName,message:msg}); addChatMessage(myName,msg,true);
+}
+function addChatMessage(name,text,isMe){
+  const msgs=document.getElementById('chatMessages');
+  const d=document.createElement('div'); d.className='chat-msg';
+  const t=new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});
+  d.innerHTML=`<div class="cm-name ${isMe?'me':''}">${esc(name)}</div><div class="cm-text">${esc(text)}</div><div class="cm-time">${t}</div>`;
+  msgs.appendChild(d); scrollChat();
+}
+function addSysMsg(text){
+  const msgs=document.getElementById('chatMessages');
+  const d=document.createElement('div');
+  d.innerHTML=`<div style="color:var(--muted);font-size:.78rem;text-align:center;padding:.3rem 0;font-style:italic">${esc(text)}</div>`;
+  msgs.appendChild(d); scrollChat();
+}
+function scrollChat(){const m=document.getElementById('chatMessages');m.scrollTop=m.scrollHeight;}
+
+// ══════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════
+function updateGrid(){
+  const grid=document.getElementById('videoGrid');
+  const n=grid.querySelectorAll('.video-wrap').length;
+  grid.className='video-grid';
+  grid.classList.add(n<=1?'grid-1':n===2?'grid-2':n===3?'grid-3':n===4?'grid-4':'grid-many');
+}
+function updateParticipantCount(){document.getElementById('pCount').textContent=connections.size+1;}
+function broadcast(data,exc){connections.forEach((p,pid)=>{if(pid!==exc&&p.conn?.open)try{p.conn.send(data);}catch{}});}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
+function startTimer(){meetingSeconds=0;timerInt=setInterval(()=>{meetingSeconds++;const m=String(Math.floor(meetingSeconds/60)).padStart(2,'0');const s=String(meetingSeconds%60).padStart(2,'0');document.getElementById('timerDisplay').textContent=`${m}:${s}`;},1000);}
+function show(id){document.getElementById(id).style.display='flex';}
+function hide(id){document.getElementById(id).style.display='none';}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+</body>
+</html>
