@@ -343,6 +343,10 @@ html,body{height:100%;height:100dvh;font-family:'DM Sans',sans-serif;background:
 .hand-alert{background:var(--warn);color:#000;border-radius:10px;padding:.5rem 1.1rem;font-size:.85rem;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:slideDown .3s ease;pointer-events:auto;}
 @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 
+
+/* Host-only items hidden for guests */
+.host-only { display: none; }
+body.is-host .host-only { display: flex; }
 </style>
 </head>
 <body>
@@ -650,7 +654,7 @@ function mainAction() {
 async function createRoom() {
   const name = document.getElementById('nameInput').value.trim();
   if (!name) { toast('Ingresa tu nombre'); return; }
-  myName = name; isHost = true;
+  myName = name; isHost = true; document.body.classList.add('is-host');
   roomId = 'room-' + Math.random().toString(36).slice(2, 10);
   history.replaceState(null, '', location.pathname + location.search);
   setStatus('Iniciando sala…');
@@ -976,10 +980,7 @@ function enterMeeting() {
   mtg.style.display = 'flex';
   mtg.style.height = window.innerHeight + 'px';
   setTimeout(fixMobileViewport, 100);
-  // Show/hide host-only menu items
-  document.querySelectorAll('.host-only').forEach(el => {
-    el.style.display = isHost ? '' : 'none';
-  });
+  // host-only items controlled by CSS .is-host class on body
   document.getElementById('dispRoom').textContent = roomId.slice(0, 10) + '…';
   attachLocalVideo();
   startTimer();
@@ -1313,9 +1314,37 @@ function exportNotes() {
 function toggleRec() {
   if (!isRecording) {
     try {
-      const stream = room.localParticipant.getTrack(LivekitClient.Track.Source.Camera)?.track?.mediaStream;
+      // Capture entire meeting grid (all participants)
+      const meetingEl = document.getElementById('meeting');
+      let stream;
+      if (meetingEl.captureStream) {
+        stream = meetingEl.captureStream(25);
+      } else {
+        // Fallback: composite all videos onto a canvas
+        const recCanvas = document.createElement('canvas');
+        recCanvas.width = meetingEl.offsetWidth || 1280;
+        recCanvas.height = meetingEl.offsetHeight || 720;
+        const ctx = recCanvas.getContext('2d');
+        const drawFrame = () => {
+          if (!isRecording) return;
+          ctx.fillStyle = '#0d0f14';
+          ctx.fillRect(0, 0, recCanvas.width, recCanvas.height);
+          document.querySelectorAll('#vGrid video').forEach(vid => {
+            const r = vid.getBoundingClientRect();
+            const mr = meetingEl.getBoundingClientRect();
+            try { ctx.drawImage(vid, r.left - mr.left, r.top - mr.top, r.width, r.height); } catch {}
+          });
+          requestAnimationFrame(drawFrame);
+        };
+        drawFrame();
+        stream = recCanvas.captureStream(25);
+        // Add audio from local mic
+        const audioTrack = room.localParticipant.getTrack(LivekitClient.Track.Source.Microphone)?.track?.mediaStreamTrack;
+        if (audioTrack) stream.addTrack(audioTrack);
+      }
       if (!stream) { toast('Sin stream de video'); return; }
-      recorder = new MediaRecorder(stream, {mimeType:'video/webm;codecs=vp9,opus'});
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus' : 'video/webm';
+      recorder = new MediaRecorder(stream, {mimeType});
       recChunks = [];
       recorder.ondataavailable = e => { if(e.data.size>0) recChunks.push(e.data); };
       recorder.onstop = () => {
