@@ -75,7 +75,7 @@ html,body{height:100%;height:100dvh;font-family:'DM Sans',sans-serif;background:
 .wbadge{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem 1.2rem;color:var(--accent);font-weight:600;}
 
 /* MEETING */
-#meeting{display:none;flex-direction:column;height:100dvh;height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));box-sizing:border-box;}
+#meeting{display:none;flex-direction:column;height:100dvh;box-sizing:border-box;}
 .tbar{display:flex;align-items:center;padding:.55rem 1rem;background:var(--surface);border-bottom:1px solid var(--border);gap:.65rem;flex-shrink:0;flex-wrap:wrap;}
 .tbrand{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;}
 .tbrand span{color:var(--accent);}
@@ -323,7 +323,7 @@ html,body{height:100%;height:100dvh;font-family:'DM Sans',sans-serif;background:
 .mdi .mi{font-size:.95rem;flex-shrink:0;width:18px;text-align:center;}
 
 /* CONTROLS */
-.cbar{display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.6rem 1rem;padding-bottom:calc(.6rem + env(safe-area-inset-bottom, 16px));background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;min-height:74px;}
+.cbar{display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.6rem 1rem;padding-bottom:.6rem;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;min-height:74px;}
 .cc{display:flex;flex-direction:column;align-items:center;gap:.18rem;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:.52rem .78rem;cursor:pointer;transition:all .2s;min-width:46px;}
 .cc:hover{background:var(--border);}
 .cc.on{background:var(--accent);border-color:var(--accent);}
@@ -358,14 +358,8 @@ html,body{height:100%;height:100dvh;font-family:'DM Sans',sans-serif;background:
 .hand-alert{background:var(--warn);color:#000;border-radius:10px;padding:.5rem 1.1rem;font-size:.85rem;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:slideDown .3s ease;pointer-events:auto;}
 @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 
-/* Mobile nav bar clearance */
-@supports not (padding-bottom: env(safe-area-inset-bottom)) {
-  .cbar { padding-bottom: 1.2rem; }
-}
-@media (max-width: 768px) {
-  .cbar { padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem)); min-height: 80px; }
-  #meeting { height: 100dvh; }
-}
+/* Floating leave button for mobile */
+#floatLeave{display:flex;position:fixed;bottom:90px;right:16px;z-index:500;background:#e53935;color:#fff;border:none;border-radius:50%;width:52px;height:52px;font-size:1.4rem;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.5);align-items:center;justify-content:center;}
 </style>
 </head>
 <body>
@@ -507,6 +501,7 @@ html,body{height:100%;height:100dvh;font-family:'DM Sans',sans-serif;background:
     <button class="lbtn" onclick="leaveRoom()">📞 Salir</button>
   </div>
 </div>
+<button id="floatLeave" onclick="leaveRoom()" title="Salir">📞</button>
 
 <!-- WHITEBOARD -->
 <div id="wbOverlay">
@@ -1012,7 +1007,10 @@ async function rejectParticipant(sid, name) {
 // ══ VIDEO ══
 function enterMeeting() {
   hide('lobby'); hide('waitingRoom');
-  document.getElementById('meeting').style.display = 'flex';
+  const mtg = document.getElementById('meeting');
+  mtg.style.display = 'flex';
+  mtg.style.height = window.innerHeight + 'px';
+  setTimeout(fixMobileViewport, 100);
   document.getElementById('dispRoom').textContent = roomId.slice(0, 10) + '…';
   attachLocalVideo();
   startTimer();
@@ -1663,6 +1661,27 @@ function wDebug(msg) {
   if (el) el.innerHTML += new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ' ' + msg + '<br>';
   console.log('[WR]', msg);
 }
+
+// ── MOBILE VIEWPORT FIX ──────────────────────────
+function fixMobileViewport() {
+  // Set --vh to actual visible height (excludes browser chrome + OS nav bar)
+  const vh = window.innerHeight;
+  document.documentElement.style.setProperty('--real-vh', vh + 'px');
+  const meeting = document.getElementById('meeting');
+  if (meeting && meeting.style.display !== 'none') {
+    meeting.style.height = vh + 'px';
+  }
+  // Add bottom padding to cbar equal to difference between screen and viewport
+  const navBarHeight = window.screen.height - window.outerHeight;
+  const extraPad = Math.max(0, window.outerHeight - window.innerHeight - 60);
+  const cbar = document.querySelector('.cbar');
+  if (cbar) cbar.style.paddingBottom = Math.max(10, Math.min(extraPad, 80)) + 'px';
+}
+window.addEventListener('resize', fixMobileViewport);
+window.addEventListener('load', fixMobileViewport);
+// Also fix when entering meeting
+const _origEnterMeeting = typeof enterMeeting === 'function' ? enterMeeting : null;
+
 </script>
 </body>
 </html>
