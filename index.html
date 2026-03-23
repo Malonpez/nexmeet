@@ -729,7 +729,20 @@ async function joinLiveKit(rid, name, host) {
     await room.connect(LK_URL, token);
 
     // Publish tracks
-    await room.localParticipant.enableCameraAndMicrophone();
+    const _isMobile = /Mobi|Android|iPhone|iPad/.test(navigator.userAgent);
+    if (_isMobile) {
+      try {
+        const _s = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'user' } },
+          audio: { echoCancellation: true, noiseSuppression: true }
+        });
+        window._currentFacing = 'user';
+        await room.localParticipant.publishTrack(_s.getVideoTracks()[0]);
+        await room.localParticipant.publishTrack(_s.getAudioTracks()[0]);
+      } catch { await room.localParticipant.enableCameraAndMicrophone(); }
+    } else {
+      await room.localParticipant.enableCameraAndMicrophone();
+    }
 
     if (host) {
       enterMeeting();
@@ -796,6 +809,8 @@ function setupRoomEvents() {
     try {
       const data = payload instanceof Uint8Array ? payload : new Uint8Array(payload);
       const msg = JSON.parse(new TextDecoder().decode(data));
+      // Ignore messages from self (LiveKit v1 echoes back to sender)
+      if (participant && participant.identity === myName) return;
       handleDataMsg(msg, participant);
     } catch(e) { console.warn('DataReceived parse error:', e); }
   });
@@ -938,12 +953,27 @@ function rmKnock(sid) { document.getElementById('k-' + sid)?.remove(); }
 
 async function admitParticipant(sid, name) {
   rmKnock(sid);
-  // Send admitted to that specific participant
-  const participant = [...room.remoteParticipants.values()].find(p => p.sid === sid);
-  if (participant) {
-    const enc = new TextEncoder();
-    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'admitted', forIdentity: participant.identity })), LivekitClient.DataPacket_Kind.RELIABLE);
-  }
+  // Find participant by sid OR by identity (name)
+  let participant = [...room.remoteParticipants.values()].find(p => p.sid === sid);
+  if (!participant) participant = [...room.remoteParticipants.values()].find(p => p.identity === name);
+  
+  const targetIdentity = participant ? participant.identity : name;
+  const enc = new TextEncoder();
+  // Send admitted message — guest filters by forIdentity
+  await room.localParticipant.publishData(
+    enc.encode(JSON.stringify({ type: 'admitted', forIdentity: targetIdentity })),
+    LivekitClient.DataPacket_Kind.RELIABLE
+  );
+  // Also send a second time after 1s in case first was lost
+  setTimeout(async () => {
+    try {
+      await room.localParticipant.publishData(
+        enc.encode(JSON.stringify({ type: 'admitted', forIdentity: targetIdentity })),
+        LivekitClient.DataPacket_Kind.RELIABLE
+      );
+    } catch {}
+  }, 1000);
+  
   setWov(false);
   addSys(name + ' fue admitido');
   updateChatSel();
