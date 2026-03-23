@@ -1,0 +1,18 @@
+{
+  "name": "NexMeet — Video Conferencias Privadas",
+  "short_name": "NexMeet",
+  "description": "Videoconferencias privadas, cifradas, servidores en Australia",
+  "start_url": "/nexmeet/",
+  "scope": "/nexmeet/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d0f14",
+  "theme_color": "#0d0f14",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%230d0f14'/><text x='50%' y='55%' font-family='sans-serif' font-weight='800' font-size='72' fill='white' text-anchor='middle' dominant-baseline='middle'>N</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
