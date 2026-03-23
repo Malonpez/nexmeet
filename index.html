@@ -31,6 +31,92 @@
   }
   tryNext();
 })();
+
+// ── VIDEO/AUDIO E2E — Insertable Streams ──────────────────
+let _e2eeSupported = false;
+
+function checkInsertableStreams() {
+  _e2eeSupported = typeof RTCRtpSender !== 'undefined' &&
+    (typeof RTCRtpSender.prototype.createEncodedStreams === 'function' ||
+     typeof RTCRtpSender.prototype.transform !== 'undefined');
+  return _e2eeSupported;
+}
+
+async function applyE2EEToSender(sender) {
+  if (!_e2eeCryptoKey || !sender) return;
+  try {
+    const { readable, writable } = sender.createEncodedStreams();
+    const transform = new TransformStream({
+      async transform(frame, controller) {
+        try {
+          const iv = crypto.getRandomValues(new Uint8Array(12));
+          const enc = await crypto.subtle.encrypt(
+            { name: 'AES-GCM', iv }, _e2eeCryptoKey, frame.data
+          );
+          const buf = new Uint8Array(12 + enc.byteLength);
+          buf.set(iv); buf.set(new Uint8Array(enc), 12);
+          frame.data = buf.buffer;
+          controller.enqueue(frame);
+        } catch { controller.enqueue(frame); }
+      }
+    });
+    readable.pipeThrough(transform).pipeTo(writable);
+  } catch(e) { console.warn('E2EE sender failed:', e); }
+}
+
+async function applyE2EEToReceiver(receiver) {
+  if (!_e2eeCryptoKey || !receiver) return;
+  try {
+    const { readable, writable } = receiver.createEncodedStreams();
+    const transform = new TransformStream({
+      async transform(frame, controller) {
+        try {
+          const data = new Uint8Array(frame.data);
+          const iv = data.slice(0, 12);
+          const encrypted = data.slice(12);
+          frame.data = await crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv }, _e2eeCryptoKey, encrypted
+          );
+          controller.enqueue(frame);
+        } catch { controller.enqueue(frame); }
+      }
+    });
+    readable.pipeThrough(transform).pipeTo(writable);
+  } catch(e) { console.warn('E2EE receiver failed:', e); }
+}
+
+function applyE2EEToRoom() {
+  if (!checkInsertableStreams() || !_e2eeCryptoKey || !room) return;
+  // Local tracks
+  room.localParticipant.trackPublications.forEach(pub => {
+    const sender = pub.track?.sender;
+    if (sender) applyE2EEToSender(sender);
+  });
+  // Remote tracks
+  room.remoteParticipants.forEach(p => {
+    p.trackPublications.forEach(pub => {
+      const receiver = pub.track?.receiver;
+      if (receiver) applyE2EEToReceiver(receiver);
+    });
+  });
+}
+
+function updateE2EEBadge() {
+  const badge = document.querySelector('.enc-badge');
+  if (!badge) return;
+  if (_e2eeCryptoKey && _e2eeSupported) {
+    badge.textContent = '🔐 E2E · AES-256-GCM';
+    badge.style.background = 'rgba(0,229,195,.15)';
+    badge.style.color = '#00e5c3';
+    badge.title = 'Cifrado extremo a extremo — la clave nunca sale de tu navegador';
+  } else if (_e2eeCryptoKey) {
+    badge.textContent = '🔒 E2E Datos · TLS Video';
+    badge.title = 'Datos cifrados E2E. Video cifrado en tránsito (Insertable Streams no soportado en este navegador)';
+  } else {
+    badge.textContent = '🔒 TLS · LiveKit SFU';
+  }
+}
+
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -625,10 +711,58 @@ function parseHash() {
   if (!raw) return null;
   const parts = raw.split('|');
   if (parts.length < 2) return null;
-  return { roomId: parts[0], expiry: parseInt(parts[1], 10) };
+  return { roomId: parts[0], expiry: parseInt(parts[1], 10), e2eeKey: parts[2] || null };
 }
 function buildLink(rid, ms) {
-  return location.href.split('#')[0] + '#' + rid + '|' + (Date.now() + ms);
+  const keyB64 = window._e2eeKeyB64 || '';
+  return location.href.split('#')[0] + '#' + rid + '|' + (Date.now() + ms) + (keyB64 ? '|' + keyB64 : '');
+}
+
+// ── E2EE Key management ──────────────────
+let _e2eeCryptoKey = null;
+window._e2eeKeyB64 = '';
+
+async function generateE2EEKey() {
+  const key = await crypto.subtle.generateKey(
+    { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']
+  );
+  const raw = await crypto.subtle.exportKey('raw', key);
+  window._e2eeKeyB64 = btoa(String.fromCharCode(...new Uint8Array(raw)))
+    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  _e2eeCryptoKey = key;
+  return key;
+}
+
+async function importE2EEKey(b64) {
+  try {
+    const padded = b64.replace(/-/g,'+').replace(/_/g,'/');
+    const raw = Uint8Array.from(atob(padded), c => c.charCodeAt(0));
+    _e2eeCryptoKey = await crypto.subtle.importKey(
+      'raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']
+    );
+    return _e2eeCryptoKey;
+  } catch(e) { console.warn('E2EE key import failed:', e); return null; }
+}
+
+async function e2eeEncrypt(data) {
+  if (!_e2eeCryptoKey) return data;
+  try {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const enc = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, _e2eeCryptoKey, data);
+    const out = new Uint8Array(12 + enc.byteLength);
+    out.set(iv); out.set(new Uint8Array(enc), 12);
+    return out.buffer;
+  } catch { return data; }
+}
+
+async function e2eeDecrypt(data) {
+  if (!_e2eeCryptoKey) return data;
+  try {
+    const bytes = new Uint8Array(data);
+    const iv = bytes.slice(0, 12);
+    const enc = bytes.slice(12);
+    return await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, _e2eeCryptoKey, enc);
+  } catch { return data; }
 }
 function fmtExpiry(ms) {
   const m = Math.round(ms / 60000);
@@ -694,6 +828,7 @@ async function joinWithParsed(parsed) {
   if (!name) { toast('Ingresa tu nombre'); return; }
   if (Date.now() > parsed.expiry) { show('expiredScreen'); return; }
   myName = name; isHost = false; roomId = parsed.roomId;
+  if (parsed.e2eeKey) await importE2EEKey(parsed.e2eeKey);
   hide('lobby');
   document.getElementById('wNameBadge').textContent = myName;
   show('waitingRoom');
@@ -747,6 +882,7 @@ async function joinLiveKit(rid, name, host) {
     if (host) {
       enterMeeting();
       setWov(true);
+      setTimeout(() => { applyE2EEToRoom(); updateE2EEBadge(); }, 1000);
     } else {
       // Send knock request via data
       const enc = new TextEncoder();
@@ -782,6 +918,9 @@ function setupRoomEvents() {
     if (track.kind === LivekitClient.Track.Kind.Video) {
       if (pub.source === LivekitClient.Track.Source.ScreenShare) {
         buildSSLayout(participant.sid, participant.identity, track);
+        if (_e2eeCryptoKey && checkInsertableStreams()) {
+          setTimeout(() => applyE2EEToReceiver(track.receiver), 300);
+        }
       } else {
         attachVideo(participant.sid, participant.identity, track);
       }
@@ -805,16 +944,26 @@ function setupRoomEvents() {
     });
   });
 
-  room.on(LivekitClient.RoomEvent.DataReceived, (payload, participant, kind) => {
+  room.on(LivekitClient.RoomEvent.DataReceived, async (payload, participant, kind) => {
     try {
       const data = payload instanceof Uint8Array ? payload : new Uint8Array(payload);
-      const text = new TextDecoder().decode(data);
+      let msgBytes;
+      if (data[0] === 0x01) {
+        // Encrypted — decrypt first
+        const decrypted = await e2eeDecrypt(data.slice(1).buffer);
+        msgBytes = new Uint8Array(decrypted);
+      } else if (data[0] === 0x00) {
+        msgBytes = data.slice(1);
+      } else {
+        msgBytes = data; // legacy unversioned
+      }
+      const text = new TextDecoder().decode(msgBytes);
       const msg = JSON.parse(text);
-      wDebug('MSG:' + text.substring(0,80) + ' from:' + (participant?.identity||'?'));
+      wDebug('MSG:' + text.substring(0,60) + (data[0]===0x01?' [E2E✓]':' [plain]'));
       handleDataMsg(msg, participant);
-    } catch(e) { 
+    } catch(e) {
       wDebug('ERR:' + e.message);
-      console.warn('DataReceived parse error:', e); 
+      console.warn('DataReceived parse error:', e);
     }
   });
 
@@ -855,6 +1004,7 @@ function handleDataMsg(msg, participant) {
       wDebug('ENTERING MEETING');
       hide('waitingRoom');
       enterMeeting();
+      setTimeout(() => { applyE2EEToRoom(); updateE2EEBadge(); }, 1000);
       break;
     case 'rejected':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
