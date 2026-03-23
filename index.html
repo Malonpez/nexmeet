@@ -439,8 +439,22 @@ window.onload = () => {
     secure: true,
     config: { iceServers: [
       {urls:'stun:stun.l.google.com:19302'},
-      {urls:'stun:stun1.l.google.com:19302'},
-      {urls:'stun:stun2.l.google.com:19302'}
+      {urls:'stun:209.38.93.135:3478'},
+      {
+        urls:'turn:209.38.93.135:3478',
+        username:'nexmeet',
+        credential:'NexMeet2024!'
+      },
+      {
+        urls:'turn:209.38.93.135:3478?transport=tcp',
+        username:'nexmeet',
+        credential:'NexMeet2024!'
+      },
+      {
+        urls:'turns:209.38.93.135:5349',
+        username:'nexmeet',
+        credential:'NexMeet2024!'
+      }
     ]}
   });
 
