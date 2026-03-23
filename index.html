@@ -809,8 +809,7 @@ function setupRoomEvents() {
     try {
       const data = payload instanceof Uint8Array ? payload : new Uint8Array(payload);
       const msg = JSON.parse(new TextDecoder().decode(data));
-      // Ignore messages from self (LiveKit v1 echoes back to sender)
-      if (participant && participant.identity === myName) return;
+      // Note: LiveKit v1 does not echo data to sender
       handleDataMsg(msg, participant);
     } catch(e) { console.warn('DataReceived parse error:', e); }
   });
@@ -844,14 +843,18 @@ function handleDataMsg(msg, participant) {
       showKnock(participant?.sid || 'unknown', msg.name || participant?.identity || 'Invitado');
       break;
     case 'admitted':
-      // Check if this message is for us
+      // Accept if for us specifically OR if broadcast (no forIdentity)
       if (msg.forIdentity && msg.forIdentity !== myName) break;
+      // Only act if we're a guest still waiting — not already in meeting
+      if (isHost) break;
+      if (window._knockInterval) clearInterval(window._knockInterval);
       hide('waitingRoom');
       enterMeeting();
-      setWov(false);
       break;
     case 'rejected':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
+      if (document.getElementById('waitingRoom').style.display === 'none') break;
+      if (window._knockInterval) clearInterval(window._knockInterval);
       hide('waitingRoom');
       show('rejectedScreen');
       room?.disconnect();
@@ -953,29 +956,34 @@ function rmKnock(sid) { document.getElementById('k-' + sid)?.remove(); }
 
 async function admitParticipant(sid, name) {
   rmKnock(sid);
-  // Find participant by sid OR by identity (name)
-  let participant = [...room.remoteParticipants.values()].find(p => p.sid === sid);
-  if (!participant) participant = [...room.remoteParticipants.values()].find(p => p.identity === name);
-  
-  const targetIdentity = participant ? participant.identity : name;
   const enc = new TextEncoder();
-  // Send admitted message — guest filters by forIdentity
-  await room.localParticipant.publishData(
-    enc.encode(JSON.stringify({ type: 'admitted', forIdentity: targetIdentity })),
-    LivekitClient.DataPacket_Kind.RELIABLE
-  );
-  // Also send a second time after 1s in case first was lost
+  
+  // Send 3 times: with name, without restriction, and after delay
+  // This ensures delivery even if data channel is laggy
+  const msgs = [
+    JSON.stringify({ type: 'admitted', forIdentity: name }),
+    JSON.stringify({ type: 'admitted' }), // broadcast fallback
+  ];
+  
+  for (const m of msgs) {
+    try {
+      await room.localParticipant.publishData(enc.encode(m), LivekitClient.DataPacket_Kind.RELIABLE);
+      await new Promise(r => setTimeout(r, 200));
+    } catch(e) { console.warn('admit send error:', e); }
+  }
+  
+  // Retry after 1.5s
   setTimeout(async () => {
     try {
       await room.localParticipant.publishData(
-        enc.encode(JSON.stringify({ type: 'admitted', forIdentity: targetIdentity })),
+        enc.encode(JSON.stringify({ type: 'admitted', forIdentity: name })),
         LivekitClient.DataPacket_Kind.RELIABLE
       );
     } catch {}
-  }, 1000);
-  
+  }, 1500);
+
   setWov(false);
-  addSys(name + ' fue admitido');
+  addSys(name + ' fue admitido ✓');
   updateChatSel();
 }
 
