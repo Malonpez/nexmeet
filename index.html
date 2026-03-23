@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>NexMeet — Video Conferencias Privadas</title>
 <script>
 // LiveKit SDK loader with fallbacks
@@ -323,7 +323,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .mdi .mi{font-size:.95rem;flex-shrink:0;width:18px;text-align:center;}
 
 /* CONTROLS */
-.cbar{display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.7rem 1rem;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;min-height:74px;}
+.cbar{display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.7rem 1rem;padding-bottom:calc(.7rem + env(safe-area-inset-bottom, 0px));background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;min-height:74px;}
 .cc{display:flex;flex-direction:column;align-items:center;gap:.18rem;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:.52rem .78rem;cursor:pointer;transition:all .2s;min-width:46px;}
 .cc:hover{background:var(--border);}
 .cc.on{background:var(--accent);border-color:var(--accent);}
@@ -469,7 +469,6 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
   <div class="cbar">
     <button class="cc" id="ccMic" onclick="toggleMic()"><div class="ci">🎤</div><div class="cl">Micro</div></button>
     <button class="cc" id="ccCam" onclick="toggleCam()"><div class="ci">📷</div><div class="cl">Cámara</div></button>
-    <button class="cc" id="ccFlip" onclick="flipCamera()" title="Cambiar cámara"><div class="ci">🔄</div><div class="cl">Girar</div></button>
     <button class="cc" id="ccScreen" onclick="toggleScreen()"><div class="ci">🖥️</div><div class="cl">Pantalla</div></button>
     <button class="cc" id="ccHand" onclick="toggleHand()"><div class="ci">✋</div><div class="cl">Mano</div></button>
     <div class="cdiv"></div>
