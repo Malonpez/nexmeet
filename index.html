@@ -677,6 +677,10 @@ body.is-host .host-only { display: flex; }
 <div id="recNotif">⏺ Grabando…</div>
 <div class="toast" id="toast"></div>
 <script>
+// ══ UTILS ══
+function hide(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+function show(id) { const el = document.getElementById(id); if (el) el.style.display = 'flex'; }
+
 // ══ CONFIG ══
 const TOKEN_SERVER = 'https://meet.newinteriorsolutions.com.au';
 const LK_URL = 'wss://meet.newinteriorsolutions.com.au';
