@@ -358,8 +358,6 @@ html,body{height:100%;height:100dvh;font-family:'DM Sans',sans-serif;background:
 .hand-alert{background:var(--warn);color:#000;border-radius:10px;padding:.5rem 1.1rem;font-size:.85rem;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:slideDown .3s ease;pointer-events:auto;}
 @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 
-/* Floating leave button for mobile */
-#floatLeave{display:flex;position:fixed;bottom:90px;right:16px;z-index:500;background:#e53935;color:#fff;border:none;border-radius:50%;width:52px;height:52px;font-size:1.4rem;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.5);align-items:center;justify-content:center;}
 </style>
 </head>
 <body>
@@ -501,7 +499,6 @@ html,body{height:100%;height:100dvh;font-family:'DM Sans',sans-serif;background:
     <button class="lbtn" onclick="leaveRoom()">📞 Salir</button>
   </div>
 </div>
-<button id="floatLeave" onclick="leaveRoom()" title="Salir">📞</button>
 
 <!-- WHITEBOARD -->
 <div id="wbOverlay">
@@ -1484,11 +1481,11 @@ function downloadReport(){if(!lastReportText){toast('No hay reporte');return;}co
 // Photo URLs for realistic backgrounds (loaded once, cached)
 const VBG_PHOTOS = [
   null, // slot 0 = blur (no image needed)
-  'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1280&q=80', // oficina moderna
-  'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=1280&q=80', // biblioteca
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1280&q=80', // living room
-  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1280&q=80', // bosque
-  'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1280&q=80', // ciudad noche
+  'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1280&q=85', // sala de directorio / boardroom
+  'https://images.unsplash.com/photo-1555421689-d68471e189f2?w=1280&q=85', // oficina ejecutiva minimalista
+  'https://images.unsplash.com/photo-1568992688065-536aad8a12f6?w=1280&q=85', // estudio con librería profesional
+  'https://images.unsplash.com/photo-1497366412874-3415097a27e7?w=1280&q=85', // sala de reuniones moderna
+  'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1280&q=85', // coworking / open office
 ];
 const VBG_IMG_CACHE = {};
 
@@ -1518,12 +1515,12 @@ function drawPhotoOrFallback(idx, fallbackFn) {
 }
 
 const VBG_DEFS=[
-  {id:0,label:'🌫️ Desenfoque',draw:drawBlur},
-  {id:1,label:'🏢 Oficina moderna',draw:drawPhotoOrFallback(1, drawOffice)},
-  {id:2,label:'📚 Biblioteca',draw:drawPhotoOrFallback(2, drawOffice)},
-  {id:3,label:'🛋️ Living room',draw:drawPhotoOrFallback(3, drawNature)},
-  {id:4,label:'🌿 Bosque',draw:drawPhotoOrFallback(4, drawNature)},
-  {id:5,label:'🌃 Ciudad noche',draw:drawPhotoOrFallback(5, drawCity)},
+  {id:0,label:'🌫️ Desenfoque suave',draw:drawBlur},
+  {id:1,label:'🏛️ Sala de directorio',draw:drawPhotoOrFallback(1, drawOffice)},
+  {id:2,label:'💼 Oficina ejecutiva',draw:drawPhotoOrFallback(2, drawOffice)},
+  {id:3,label:'📚 Estudio profesional',draw:drawPhotoOrFallback(3, drawOffice)},
+  {id:4,label:'🏗️ Sala de reuniones',draw:drawPhotoOrFallback(4, drawOffice)},
+  {id:5,label:'🤝 Coworking / Startup',draw:drawPhotoOrFallback(5, drawOffice)},
 ];
 // Pre-load all photos
 VBG_PHOTOS.forEach((url, i) => { if (url) loadVBGPhoto(i, () => {}); });
