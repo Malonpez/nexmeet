@@ -719,7 +719,10 @@ function parseHash() {
 }
 function buildLink(rid, ms) {
   const keyB64 = window._e2eeKeyB64 || '';
-  return location.href.split('#')[0] + '#' + rid + '|' + (Date.now() + ms) + (keyB64 ? '|' + keyB64 : '');
+  const base = location.protocol === 'file:' 
+    ? 'https://malonpez.github.io/nexmeet/' 
+    : location.href.split('#')[0];
+  return base + '#' + rid + '|' + (Date.now() + ms) + (keyB64 ? '|' + keyB64 : '');
 }
 
 // ── E2EE Key management ──────────────────
