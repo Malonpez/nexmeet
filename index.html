@@ -895,9 +895,20 @@ async function joinLiveKit(rid, name, host) {
       setWov(true);
       setTimeout(() => { applyE2EEToRoom(); updateE2EEBadge(); }, 1000);
     } else {
-      // Send knock request via data
+      // Send knock — retry every 3s until admitted (host DataReceived may not be ready instantly)
       const enc = new TextEncoder();
-      await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'knock', name })), 0);
+      const knockMsg = enc.encode(JSON.stringify({ type: 'knock', name }));
+      const sendKnock = async () => {
+        try { await room.localParticipant.publishData(knockMsg, 0); } catch(e) {}
+      };
+      await sendKnock();
+      window._knockInterval = setInterval(async () => {
+        if (document.getElementById('meeting').style.display === 'flex') {
+          clearInterval(window._knockInterval);
+          return;
+        }
+        await sendKnock();
+      }, 3000);
     }
   } catch(e) {
     setStatus('Error al conectar: ' + e.message, true);
