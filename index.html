@@ -1426,7 +1426,7 @@ async function sendChat() {
   const toName = toId ? sel.options[sel.selectedIndex].text : '';
   if (toId) {
     const enc = new TextEncoder();
-    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'chat', name: myName, message: msg, to: toId, toName })), { reliable: true, destinationIdentities: [toId] });
+    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'chat', name: myName, message: msg, to: toId, toName })), 0);
     addChatMsg(myName, msg, true, toName);
   } else {
     await sendData({ type: 'chat', name: myName, message: msg });
