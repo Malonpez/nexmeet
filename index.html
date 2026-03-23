@@ -1669,6 +1669,14 @@ async function generateReport(){
 }
 function copyReport(){navigator.clipboard.writeText(lastReportText).then(()=>toast('Reporte copiado ✓'));}
 function downloadReport(){if(!lastReportText){toast('No hay reporte');return;}const types=['reporte-gerencial','minuta-ejecutiva','resumen-rapido','action-items'];dl(lastReportText,'nexmeet-'+types[aiOptSelected]+'-'+new Date().toISOString().slice(0,10)+'.txt','text/plain');}
+
+// ══ UTILS ══
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
+function startTimer(){meetSecs=0;timerInt=setInterval(()=>{meetSecs++;const m=String(Math.floor(meetSecs/60)).padStart(2,'0');const s=String(meetSecs%60).padStart(2,'0');document.getElementById('mTimer').textContent=`${m}:${s}`;},1000);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function dl(content,filename,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mime}));a.download=filename;a.click();}
+function wDebug(msg){const el=document.getElementById('wDebug');if(el)el.innerHTML+=new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' '+msg+'<br>';console.log('[WR]',msg);}
+
 </script>
 </body>
 </html>
