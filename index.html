@@ -719,10 +719,9 @@ async function joinLiveKit(rid, name, host) {
     const { token } = await resp.json();
 
     room = new LivekitClient.Room({
-      adaptiveStream: true,
-      dynacast: true,
+      adaptiveStream: false,
+      dynacast: false,
       audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: false },
-      videoCaptureDefaults: { resolution: LivekitClient.VideoPresets.h720.resolution },
     });
 
     setupRoomEvents();
@@ -738,7 +737,7 @@ async function joinLiveKit(rid, name, host) {
     } else {
       // Send knock request via data
       const enc = new TextEncoder();
-      await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'knock', name })), { reliable: true });
+      await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'knock', name })), LivekitClient.DataPacket_Kind.RELIABLE);
     }
   } catch(e) {
     setStatus('Error al conectar: ' + e.message, true);
@@ -793,11 +792,12 @@ function setupRoomEvents() {
     });
   });
 
-  room.on(LivekitClient.RoomEvent.DataReceived, (data, participant) => {
+  room.on(LivekitClient.RoomEvent.DataReceived, (payload, participant, kind) => {
     try {
+      const data = payload instanceof Uint8Array ? payload : new Uint8Array(payload);
       const msg = JSON.parse(new TextDecoder().decode(data));
       handleDataMsg(msg, participant);
-    } catch {}
+    } catch(e) { console.warn('DataReceived parse error:', e); }
   });
 
   room.on(LivekitClient.RoomEvent.Disconnected, () => {
@@ -816,9 +816,10 @@ function setupRoomEvents() {
 async function sendData(data, reliable=true) {
   if (!room) return;
   const enc = new TextEncoder();
+  const kind = reliable ? LivekitClient.DataPacket_Kind.RELIABLE : LivekitClient.DataPacket_Kind.LOSSY;
   try {
-    await room.localParticipant.publishData(enc.encode(JSON.stringify(data)), { reliable });
-  } catch {}
+    await room.localParticipant.publishData(enc.encode(JSON.stringify(data)), kind);
+  } catch(e) { console.warn('sendData error:', e); }
 }
 
 function handleDataMsg(msg, participant) {
@@ -828,11 +829,14 @@ function handleDataMsg(msg, participant) {
       showKnock(participant?.sid || 'unknown', msg.name || participant?.identity || 'Invitado');
       break;
     case 'admitted':
+      // Check if this message is for us
+      if (msg.forIdentity && msg.forIdentity !== myName) break;
       hide('waitingRoom');
       enterMeeting();
       setWov(false);
       break;
     case 'rejected':
+      if (msg.forIdentity && msg.forIdentity !== myName) break;
       hide('waitingRoom');
       show('rejectedScreen');
       room?.disconnect();
@@ -905,9 +909,11 @@ function handleDataMsg(msg, participant) {
       receivePollVote(msg.opt);
       break;
     case 'mute-you':
+      if (msg.forIdentity && msg.forIdentity !== myName) break;
       if (!isMuted) { isMuted = true; room.localParticipant.setMicrophoneEnabled(false); updateMicBtn(); toast('El host te silenció'); }
       break;
     case 'kick':
+      if (msg.forIdentity && msg.forIdentity !== myName) break;
       toast('Fuiste expulsado'); setTimeout(() => leaveRoom(), 2000);
       break;
     case 'lock':
@@ -936,7 +942,7 @@ async function admitParticipant(sid, name) {
   const participant = [...room.remoteParticipants.values()].find(p => p.sid === sid);
   if (participant) {
     const enc = new TextEncoder();
-    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'admitted' })), { reliable: true, destinationIdentities: [participant.identity] });
+    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'admitted', forIdentity: participant.identity })), LivekitClient.DataPacket_Kind.RELIABLE);
   }
   setWov(false);
   addSys(name + ' fue admitido');
@@ -948,7 +954,7 @@ async function rejectParticipant(sid, name) {
   const participant = [...room.remoteParticipants.values()].find(p => p.sid === sid);
   if (participant) {
     const enc = new TextEncoder();
-    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'rejected' })), { reliable: true, destinationIdentities: [participant.identity] });
+    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'rejected' })), LivekitClient.DataPacket_Kind.RELIABLE);
   }
 }
 
@@ -1120,7 +1126,7 @@ async function kickRemote(sid) {
   const p = [...room.remoteParticipants.values()].find(p => p.sid === sid);
   if (p) {
     const enc = new TextEncoder();
-    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'kick' })), { reliable: true, destinationIdentities: [p.identity] });
+    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'kick', forIdentity: p.identity })), LivekitClient.DataPacket_Kind.RELIABLE);
     setTimeout(() => removeParticipantVideo(sid), 500);
   }
 }
