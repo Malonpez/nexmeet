@@ -148,8 +148,10 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .expiry-row select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;
   color:var(--text);padding:.45rem .75rem;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;}
 .expiry-row select:focus{border-color:var(--accent);}
-.share-link-display{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
-  padding:.65rem .85rem;font-size:.72rem;font-family:monospace;color:var(--accent);word-break:break-all;line-height:1.5;margin-bottom:.85rem;}
+.share-link-display{display:block;background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:.65rem .85rem;font-size:.72rem;font-family:monospace;color:var(--accent);word-break:break-all;line-height:1.5;margin-bottom:.85rem;
+  text-decoration:none;cursor:pointer;transition:border-color .2s;}
+.share-link-display:hover{border-color:var(--accent);}
 .share-actions{display:flex;gap:.6rem;flex-wrap:wrap;}
 .share-actions .btn{font-size:.82rem;padding:.55rem 1rem;width:auto;}
 .btn-copy-link{background:var(--accent);color:#000;}
@@ -316,10 +318,11 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
               <option value="604800000">7 días</option>
             </select>
           </div>
-          <div class="share-link-display" id="shareLinkDisplay">…</div>
+          <a class="share-link-display" id="shareLinkDisplay" href="#" target="_blank" onclick="openInviteLink(event)">…</a>
           <div class="expiry-badge" id="expiryBadge">⚠️ Este link expirará — genera uno nuevo cuando sea necesario</div>
           <div class="share-actions" style="margin-top:.85rem">
             <button class="btn btn-copy-link" onclick="copyInviteLink()">📋 Copiar link</button>
+            <button class="btn" style="background:var(--accent2);color:#fff;" onclick="openInviteLink()">↗ Abrir</button>
             <button class="btn btn-copy-code" onclick="regenerateLink()">🔄 Nuevo link</button>
           </div>
         </div>
@@ -430,8 +433,10 @@ window.onload = () => {
   document.getElementById('lobbyStatus').textContent = 'Conectando…';
 
   myPeer = new Peer(undefined, {
-    // ── Si tienes servidor propio, reemplaza esto: ──
-    // host: 'peer.tuempresa.com.au', port: 443, key: 'nexmeet', secure: true,
+    host: 'peer.newinteriorsolutions.com.au',
+    port: 443,
+    key: 'nexmeet',
+    secure: true,
     config: { iceServers: [
       {urls:'stun:stun.l.google.com:19302'},
       {urls:'stun:stun1.l.google.com:19302'},
@@ -568,9 +573,17 @@ function enterMeeting() {
 function regenerateLink() {
   const ms = parseInt(document.getElementById('expirySelect').value);
   currentInviteLink = buildLink(roomId, ms);
-  document.getElementById('shareLinkDisplay').textContent = currentInviteLink;
+  const el = document.getElementById('shareLinkDisplay');
+  el.textContent = currentInviteLink;
+  el.href = currentInviteLink;
   document.getElementById('expiryBadge').textContent =
     `⏱ Este link expira en ${formatExpiry(ms)} a partir de ahora`;
+}
+
+function openInviteLink(e) {
+  if (e) e.preventDefault();
+  if (!currentInviteLink) regenerateLink();
+  window.open(currentInviteLink, '_blank');
 }
 
 function copyInviteLink() {
