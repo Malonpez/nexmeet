@@ -363,7 +363,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 
 <!-- SPECIAL SCREENS -->
 <div id="expiredScreen"><div style="font-size:3.5rem">⏰</div><h2 style="font-family:Syne,sans-serif;color:var(--danger)">Link expirado</h2><p style="color:var(--muted)">Solicita un nuevo link al organizador.</p></div>
-<div id="waitingRoom"><div class="wspin"></div><h2 style="font-family:Syne,sans-serif">Sala de espera</h2><p style="color:var(--muted)">El organizador te admitirá en breve.</p><div class="wbadge" id="wNameBadge"></div></div>
+<div id="waitingRoom"><div class="wspin"></div><h2 style="font-family:Syne,sans-serif">Sala de espera</h2><p style="color:var(--muted)">El organizador te admitirá en breve.</p><div class="wbadge" id="wNameBadge"></div><div id="wDebug" style="margin-top:1rem;font-size:.7rem;color:#0ff;background:rgba(0,0,0,.5);padding:.5rem;border-radius:6px;max-width:320px;text-align:left;min-height:40px;word-break:break-all;"></div><button onclick="enterMeeting()" style="margin-top:1rem;padding:.6rem 1.4rem;background:#0f0;color:#000;border:none;border-radius:8px;font-weight:700;font-size:.9rem;cursor:pointer;">▶ Entrar manualmente</button></div>
 <div id="rejectedScreen"><div style="font-size:3.5rem">🚫</div><h2 style="font-family:Syne,sans-serif;color:var(--danger)">Acceso denegado</h2><p style="color:var(--muted)">El organizador no admitió tu ingreso.</p></div>
 
 <!-- LOBBY -->
@@ -808,10 +808,14 @@ function setupRoomEvents() {
   room.on(LivekitClient.RoomEvent.DataReceived, (payload, participant, kind) => {
     try {
       const data = payload instanceof Uint8Array ? payload : new Uint8Array(payload);
-      const msg = JSON.parse(new TextDecoder().decode(data));
-      // Note: LiveKit v1 does not echo data to sender
+      const text = new TextDecoder().decode(data);
+      const msg = JSON.parse(text);
+      wDebug('MSG:' + text.substring(0,80) + ' from:' + (participant?.identity||'?'));
       handleDataMsg(msg, participant);
-    } catch(e) { console.warn('DataReceived parse error:', e); }
+    } catch(e) { 
+      wDebug('ERR:' + e.message);
+      console.warn('DataReceived parse error:', e); 
+    }
   });
 
   room.on(LivekitClient.RoomEvent.Disconnected, () => {
@@ -843,11 +847,12 @@ function handleDataMsg(msg, participant) {
       showKnock(participant?.sid || 'unknown', msg.name || participant?.identity || 'Invitado');
       break;
     case 'admitted':
+      wDebug('admitted! forId=' + msg.forIdentity + ' myName=' + myName + ' isHost=' + isHost);
       // Accept if for us specifically OR if broadcast (no forIdentity)
-      if (msg.forIdentity && msg.forIdentity !== myName) break;
-      // Only act if we're a guest still waiting — not already in meeting
-      if (isHost) break;
+      if (msg.forIdentity && msg.forIdentity !== myName) { wDebug('BLOCKED by forIdentity'); break; }
+      if (isHost) { wDebug('BLOCKED: isHost'); break; }
       if (window._knockInterval) clearInterval(window._knockInterval);
+      wDebug('ENTERING MEETING');
       hide('waitingRoom');
       enterMeeting();
       break;
@@ -1630,6 +1635,12 @@ function dismissHandAlert(name) {
   if (el) { el.remove(); handRaisers.delete(name); }
 }
 
+
+function wDebug(msg) {
+  const el = document.getElementById('wDebug');
+  if (el) el.innerHTML += new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ' ' + msg + '<br>';
+  console.log('[WR]', msg);
+}
 </script>
 </body>
 </html>
