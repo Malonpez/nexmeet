@@ -435,12 +435,11 @@ html,body{height:100%;height:100dvh;font-family:'DM Sans',sans-serif;background:
 body.is-host .host-only { display: flex; }
 
 
-/* ── INTRO: logo animates in, then lobby appears ── */
-.logo { animation: logoIn .8s cubic-bezier(.22,1,.36,1) both; }
-@keyframes logoIn { from { opacity:0; transform:scale(.7); } to { opacity:1; transform:scale(1); } }
-.tagline { animation: fadeIn .6s ease .5s both; }
-.lcard { animation: fadeIn .6s ease .8s both; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+/* ── INTRO ── */
+#intro{position:fixed;inset:0;z-index:9999;background:#0d0f14;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:opacity .7s ease;}
+.intro-logo{font-family:'Syne',sans-serif;font-size:clamp(2.8rem,10vw,5rem);font-weight:800;color:#fff;letter-spacing:-2px;}
+.intro-logo span{color:#00e5c3;}
+.intro-tag{font-size:.8rem;color:#6b7590;letter-spacing:.2em;text-transform:uppercase;margin-top:.8rem;}
 </style>
 </head>
 <body>
@@ -451,6 +450,11 @@ body.is-host .host-only { display: flex; }
 <div id="rejectedScreen"><div style="font-size:3.5rem">🚫</div><h2 style="font-family:Syne,sans-serif;color:var(--danger)">Acceso denegado</h2><p style="color:var(--muted)">El organizador no admitió tu ingreso.</p></div>
 
 <!-- LOBBY -->
+<div id="intro" onclick="skipIntro()">
+  <div class="intro-logo">Nex<span>Meet</span></div>
+  <div class="intro-tag">Privado por diseño. Seguro por defecto.</div>
+</div>
+
 <div id="lobby">
   <div class="logo">Nex<span>Meet</span></div>
   <div class="tagline">Privado por diseño. Seguro por defecto.</div>
@@ -762,7 +766,23 @@ function fmtExpiry(ms) {
 }
 
 // ══ INIT ══
+function skipIntro() {
+  try {
+    const intro = document.getElementById('intro');
+    const lobby = document.getElementById('lobby');
+    if (intro) { intro.style.opacity = '0'; setTimeout(() => { intro.style.display = 'none'; }, 700); }
+    if (lobby) { lobby.style.visibility = ''; lobby.style.opacity = '1'; }
+  } catch(e) {
+    // Fallback — make everything visible
+    document.querySelectorAll('#intro,#lobby').forEach(el => { if(el){ el.style.display = el.id==='intro'?'none':''; el.style.visibility=''; el.style.opacity='1'; }});
+  }
+}
 window.onload = () => {
+  const lobby = document.getElementById('lobby');
+  if (lobby) lobby.style.visibility = 'hidden';
+  const t = setTimeout(skipIntro, 3000);
+  const intro = document.getElementById('intro');
+  if (intro) intro.addEventListener('click', () => { clearTimeout(t); skipIntro(); });
 
   const parsed = parseHash();
   if (parsed) {
@@ -1635,5 +1655,6 @@ async function generateReport(){
 }
 function copyReport(){navigator.clipboard.writeText(lastReportText).then(()=>toast('Reporte copiado ✓'));}
 function downloadReport(){if(!lastReportText){toast('No hay reporte');return;}const types=['reporte-gerencial','minuta-ejecutiva','resumen-rapido','action-items'];dl(lastReportText,'nexmeet-'+types[aiOptSelected]+'-'+new Date().toISOString().slice(0,10)+'.txt','text/plain');}
-
-// ══ VIRTUAL BACKGROUNDS ══
+</script>
+</body>
+</html>
