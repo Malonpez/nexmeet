@@ -1157,6 +1157,16 @@ async function rejectParticipant(sid, name) {
 }
 
 // ══ VIDEO ══
+function fixMobileViewport() {
+  const vh = window.innerHeight;
+  const mtg = document.getElementById('meeting');
+  if (mtg && mtg.style.display !== 'none') mtg.style.height = vh + 'px';
+  const extraPad = Math.max(10, Math.min(window.outerHeight - window.innerHeight - 60, 80));
+  const cbar = document.querySelector('.cbar');
+  if (cbar) cbar.style.paddingBottom = extraPad + 'px';
+}
+window.addEventListener('resize', fixMobileViewport);
+
 function enterMeeting() {
   hide('lobby'); hide('waitingRoom');
   const mtg = document.getElementById('meeting');
