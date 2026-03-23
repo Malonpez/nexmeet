@@ -750,7 +750,7 @@ async function joinLiveKit(rid, name, host) {
     } else {
       // Send knock request via data
       const enc = new TextEncoder();
-      await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'knock', name })), LivekitClient.DataPacket_Kind.RELIABLE);
+      await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'knock', name })), 0);
     }
   } catch(e) {
     setStatus('Error al conectar: ' + e.message, true);
@@ -834,7 +834,7 @@ function setupRoomEvents() {
 async function sendData(data, reliable=true) {
   if (!room) return;
   const enc = new TextEncoder();
-  const kind = reliable ? LivekitClient.DataPacket_Kind.RELIABLE : LivekitClient.DataPacket_Kind.LOSSY;
+  const kind = reliable ? 0 : 1;
   try {
     await room.localParticipant.publishData(enc.encode(JSON.stringify(data)), kind);
   } catch(e) { console.warn('sendData error:', e); }
@@ -972,7 +972,7 @@ async function admitParticipant(sid, name) {
   
   for (const m of msgs) {
     try {
-      await room.localParticipant.publishData(enc.encode(m), LivekitClient.DataPacket_Kind.RELIABLE);
+      await room.localParticipant.publishData(enc.encode(m), 0);
       await new Promise(r => setTimeout(r, 200));
     } catch(e) { console.warn('admit send error:', e); }
   }
@@ -982,7 +982,7 @@ async function admitParticipant(sid, name) {
     try {
       await room.localParticipant.publishData(
         enc.encode(JSON.stringify({ type: 'admitted', forIdentity: name })),
-        LivekitClient.DataPacket_Kind.RELIABLE
+        0
       );
     } catch {}
   }, 1500);
@@ -997,7 +997,7 @@ async function rejectParticipant(sid, name) {
   const participant = [...room.remoteParticipants.values()].find(p => p.sid === sid);
   if (participant) {
     const enc = new TextEncoder();
-    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'rejected' })), LivekitClient.DataPacket_Kind.RELIABLE);
+    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'rejected' })), 0);
   }
 }
 
@@ -1019,11 +1019,25 @@ function attachLocalVideo() {
     grid.appendChild(wrap);
     updateGrid();
   }
+  const vid = wrap.querySelector('video');
   const camPub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
   if (camPub?.track) {
-    const vid = wrap.querySelector('video');
-    camPub.track.attach(vid);
+    try { camPub.track.attach(vid); } catch(e) {}
+    // Fallback: use mediaStreamTrack directly (works on mobile)
+    const mst = camPub.track.mediaStreamTrack;
+    if (mst && (!vid.srcObject || vid.readyState === 0)) {
+      vid.srcObject = new MediaStream([mst]);
+      vid.play().catch(() => {});
+    }
     document.getElementById('voff-vw-local')?.classList.remove('show');
+  } else {
+    // No LiveKit track yet — try to get camera directly
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'user' } }, audio: false })
+      .then(stream => {
+        vid.srcObject = stream;
+        vid.play().catch(() => {});
+        document.getElementById('voff-vw-local')?.classList.remove('show');
+      }).catch(() => {});
   }
 }
 
@@ -1169,7 +1183,7 @@ async function kickRemote(sid) {
   const p = [...room.remoteParticipants.values()].find(p => p.sid === sid);
   if (p) {
     const enc = new TextEncoder();
-    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'kick', forIdentity: p.identity })), LivekitClient.DataPacket_Kind.RELIABLE);
+    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'kick', forIdentity: p.identity })), 0);
     setTimeout(() => removeParticipantVideo(sid), 500);
   }
 }
