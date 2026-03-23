@@ -347,6 +347,18 @@ html,body{height:100%;height:100dvh;font-family:'DM Sans',sans-serif;background:
 /* Host-only items hidden for guests */
 .host-only { display: none; }
 body.is-host .host-only { display: flex; }
+
+/* ── INTRO ANIMATION ── */
+#intro{position:fixed;inset:0;z-index:9999;background:#0d0f14;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;}
+#intro.fade-out{animation:introFade .8s ease forwards;}
+@keyframes introFade{to{opacity:0;pointer-events:none;}}
+.intro-logo{font-family:'Syne',sans-serif;font-size:clamp(2.8rem,10vw,5.5rem);font-weight:800;color:#fff;letter-spacing:-2px;opacity:0;transform:scale(.6);animation:introZoom .7s cubic-bezier(.22,1,.36,1) .3s forwards;}
+.intro-logo span{color:var(--accent);}
+.intro-tag{font-size:clamp(.7rem,2.5vw,1rem);color:var(--muted);letter-spacing:.2em;text-transform:uppercase;opacity:0;animation:introTag .6s ease 1.1s forwards;}
+.intro-line{width:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin-top:1.2rem;animation:introLine .8s ease .8s forwards;}
+@keyframes introZoom{to{opacity:1;transform:scale(1);}}
+@keyframes introTag{to{opacity:1;}}
+@keyframes introLine{to{width:min(320px,60vw);}}
 </style>
 </head>
 <body>
@@ -357,6 +369,12 @@ body.is-host .host-only { display: flex; }
 <div id="rejectedScreen"><div style="font-size:3.5rem">🚫</div><h2 style="font-family:Syne,sans-serif;color:var(--danger)">Acceso denegado</h2><p style="color:var(--muted)">El organizador no admitió tu ingreso.</p></div>
 
 <!-- LOBBY -->
+<div id="intro">
+  <div class="intro-logo">Nex<span>Meet</span></div>
+  <div class="intro-line"></div>
+  <div class="intro-tag">Videoconferencias privadas · cifradas</div>
+</div>
+
 <div id="lobby">
   <div class="logo">Nex<span>Meet</span></div>
   <div class="tagline">Videoconferencias privadas · cifradas · servidores en Australia</div>
@@ -621,6 +639,16 @@ function fmtExpiry(ms) {
 
 // ══ INIT ══
 window.onload = () => {
+  // Hide lobby during intro
+  document.getElementById('lobby').style.visibility = 'hidden';
+  // After 3s animate out and show lobby
+  setTimeout(() => {
+    const intro = document.getElementById('intro');
+    intro.classList.add('fade-out');
+    document.getElementById('lobby').style.visibility = '';
+    setTimeout(() => intro.style.display = 'none', 850);
+  }, 3000);
+
   const parsed = parseHash();
   if (parsed) {
     if (Date.now() > parsed.expiry) { show('expiredScreen'); return; }
