@@ -1193,25 +1193,41 @@ function attachLocalVideo() {
     updateGrid();
   }
   const vid = wrap.querySelector('video');
+
+  // Try LiveKit track first
   const camPub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
-  if (camPub?.track) {
-    try { camPub.track.attach(vid); } catch(e) {}
-    // Fallback: use mediaStreamTrack directly (works on mobile)
+  if (camPub?.track?.mediaStreamTrack) {
     const mst = camPub.track.mediaStreamTrack;
-    if (mst && (!vid.srcObject || vid.readyState === 0)) {
+    vid.srcObject = new MediaStream([mst]);
+    vid.play().catch(() => {});
+    try { camPub.track.attach(vid); } catch(e) {}
+    document.getElementById('voff-vw-local')?.classList.remove('show');
+    return;
+  }
+
+  // Track not ready yet — retry up to 10 times every 300ms
+  let attempts = 0;
+  const retry = setInterval(() => {
+    attempts++;
+    const pub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
+    if (pub?.track?.mediaStreamTrack) {
+      const mst = pub.track.mediaStreamTrack;
       vid.srcObject = new MediaStream([mst]);
       vid.play().catch(() => {});
+      try { pub.track.attach(vid); } catch(e) {}
+      document.getElementById('voff-vw-local')?.classList.remove('show');
+      clearInterval(retry);
+    } else if (attempts >= 10) {
+      clearInterval(retry);
+      // Last resort: getUserMedia directly
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(stream => {
+          vid.srcObject = stream;
+          vid.play().catch(() => {});
+          document.getElementById('voff-vw-local')?.classList.remove('show');
+        }).catch(() => {});
     }
-    document.getElementById('voff-vw-local')?.classList.remove('show');
-  } else {
-    // No LiveKit track yet — try to get camera directly
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'user' } }, audio: false })
-      .then(stream => {
-        vid.srcObject = stream;
-        vid.play().catch(() => {});
-        document.getElementById('voff-vw-local')?.classList.remove('show');
-      }).catch(() => {});
-  }
+  }, 300);
 }
 
 function attachVideo(sid, name, track) {
