@@ -297,21 +297,6 @@ html,body{height:100%;height:100dvh;font-family:'DM Sans',sans-serif;background:
 .ai-footer span{font-size:.72rem;color:var(--muted);}
 .ai-model-badge{font-size:.7rem;color:var(--muted);background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:.15rem .55rem;}
 
-/* VBG */
-#vbgOverlay{display:none;position:fixed;inset:0;z-index:450;background:rgba(0,0,0,.8);align-items:center;justify-content:center;}
-#vbgOverlay.show{display:flex;}
-.vbg-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.8rem;max-width:520px;width:92%;}
-.vbg-box h3{font-family:'Syne',sans-serif;font-size:1.05rem;margin-bottom:1rem;}
-.vbg-preview{width:100%;height:130px;border-radius:10px;overflow:hidden;background:#000;margin-bottom:1rem;position:relative;display:flex;align-items:center;justify-content:center;}
-.vbg-preview canvas{width:100%;height:100%;object-fit:cover;}
-.vbg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1.1rem;}
-.vbg-opt{border:2px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;aspect-ratio:16/9;position:relative;transition:border-color .2s;}
-.vbg-opt:hover{border-color:var(--accent);}
-.vbg-opt.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,229,195,.35);}
-.vbg-opt canvas{width:100%;height:100%;display:block;}
-.vbg-opt .vbg-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.65);color:#fff;font-size:.66rem;text-align:center;padding:.2rem;}
-.vbg-actions{display:flex;gap:.5rem;flex-wrap:wrap;}
-.vbg-actions .btn{font-size:.8rem;padding:.5rem .9rem;width:auto;}
 
 /* MORE MENU */
 .more-wrap{position:relative;}
@@ -481,18 +466,17 @@ html,body{height:100%;height:100dvh;font-family:'DM Sans',sans-serif;background:
       <button class="cc" onclick="toggleMore()"><div class="ci">⋯</div><div class="cl">Más</div></button>
       <div class="more-drop" id="moreDrop">
         <button class="mdi" onclick="openWB()"><span class="mi">🖊️</span> Pizarra</button>
-        <button class="mdi" onclick="openPoll()"><span class="mi">📊</span> Encuesta</button>
-        <button class="mdi" onclick="openAgenda()"><span class="mi">📋</span> Agenda</button>
-        <button class="mdi" onclick="toggleRec()"><span class="mi" id="recIcon">⏺</span> <span id="recTxt">Grabar</span></button>
+        <button class="mdi host-only" onclick="openPoll()"><span class="mi">📊</span> Encuesta</button>
+        <button class="mdi host-only" onclick="openAgenda()"><span class="mi">📋</span> Agenda</button>
+        <button class="mdi host-only" onclick="toggleRec()"><span class="mi" id="recIcon">⏺</span> <span id="recTxt">Grabar</span></button>
         <button class="mdi" onclick="sendReaction('👍')"><span class="mi">👍</span> Reacción</button>
         <button class="mdi" onclick="sendReaction('❤️')"><span class="mi">❤️</span> Reacción</button>
         <button class="mdi" onclick="sendReaction('😂')"><span class="mi">😂</span> Reacción</button>
         <button class="mdi" onclick="sendReaction('👏')"><span class="mi">👏</span> Reacción</button>
-        <button class="mdi" onclick="openAI()"><span class="mi">🤖</span> Análisis IA</button>
-        <button class="mdi" onclick="exportChat()"><span class="mi">💾</span> Exportar chat</button>
+        <button class="mdi host-only" onclick="openAI()"><span class="mi">🤖</span> Análisis IA</button>
+        <button class="mdi host-only" onclick="exportChat()"><span class="mi">💾</span> Exportar chat</button>
         <button class="mdi" onclick="toggleTheme()"><span class="mi" id="themeIcon">☀️</span> <span id="themeTxt">Modo claro</span></button>
-        <button class="mdi" onclick="openVBG()"><span class="mi">🖼️</span> Fondo virtual</button>
-        <button class="mdi dk" onclick="toggleLock()"><span class="mi">🔒</span> <span id="lockTxt">Bloquear sala</span></button>
+        <button class="mdi dk host-only" onclick="toggleLock()"><span class="mi">🔒</span> <span id="lockTxt">Bloquear sala</span></button>
       </div>
     </div>
     <div class="cdiv"></div>
@@ -587,23 +571,9 @@ html,body{height:100%;height:100dvh;font-family:'DM Sans',sans-serif;background:
   </div>
 </div>
 
-<!-- VBG OVERLAY -->
-<div id="vbgOverlay">
-  <div class="vbg-box">
-    <h3>🖼️ Fondo virtual</h3>
-    <div class="vbg-preview"><canvas id="vbgPreviewCanvas"></canvas><span style="position:absolute;font-size:.72rem;color:var(--muted)" id="vbgLoading">Cargando…</span></div>
-    <div class="vbg-grid" id="vbgGrid"></div>
-    <div class="vbg-actions">
-      <button class="btn btn-g" onclick="applyVBG()">✓ Aplicar</button>
-      <button class="btn btn-s" onclick="removeVBG()">✕ Sin fondo</button>
-      <button class="btn btn-s" onclick="closeVBG()">Cancelar</button>
-    </div>
-  </div>
-</div>
 
 <div id="recNotif">⏺ Grabando…</div>
 <div class="toast" id="toast"></div>
-<canvas id="vbgCanvas" style="display:none"></canvas>
 <script>
 // ══ CONFIG ══
 const TOKEN_SERVER = 'https://meet.newinteriorsolutions.com.au';
@@ -623,8 +593,6 @@ let wbDrawing = false, wbTool = 'pen', wbLastX = 0, wbLastY = 0;
 let agendaText = '';
 let pollData = null, myVote = null;
 let aiOptSelected = 0, lastReportText = '';
-let vbgActive = false, vbgSelected = 0, vbgSegmenter = null, vbgAnimId = null;
-let vbgOrigTrack = null, vbgCanvasStream = null;
 
 // Pending knock queue (for host) — identity → {resolve}
 const pendingKnocks = new Map();
@@ -1008,6 +976,10 @@ function enterMeeting() {
   mtg.style.display = 'flex';
   mtg.style.height = window.innerHeight + 'px';
   setTimeout(fixMobileViewport, 100);
+  // Show/hide host-only menu items
+  document.querySelectorAll('.host-only').forEach(el => {
+    el.style.display = isHost ? '' : 'none';
+  });
   document.getElementById('dispRoom').textContent = roomId.slice(0, 10) + '…';
   attachLocalVideo();
   startTimer();
@@ -1407,7 +1379,7 @@ async function launchPoll() {
   toast('Encuesta lanzada 🚀 — el overlay muestra resultados en vivo');
 }
 function receivePoll(p){pollData={q:p.q,opts:p.opts,votes:p.opts.map(()=>0),total:0};showPollVote();document.getElementById('pollOverlay').classList.add('show');}
-function showPollVote(){document.getElementById('pollTitle').textContent='📊 '+pollData.q;document.getElementById('pollCreate').style.display='none';const vd=document.getElementById('pollVote');vd.style.display='block';vd.innerHTML=pollData.opts.map((o,i)=>`<button class="pvote-btn" id="pvote-${i}" onclick="castVote(${i})">${esc(o)}</button>`).join('');}
+function showPollVote(){document.getElementById('pollTitle').textContent='📊 '+pollData.q;document.getElementById('pollCreate').style.display='none';const vd=document.getElementById('pollVote');vd.style.display='block';vd.innerHTML=pollData.opts.map((o,i)=>`<button class="pvote-btn" id="pvote-${i}" onclick="castVote(${i})">${esc(o)}</button>`).join('')+`<button class="btn btn-s" style="width:auto;margin-top:.75rem;font-size:.78rem" onclick="closePoll()">✕ Cerrar</button>`;}
 async function castVote(idx){if(myVote!==null)return;myVote=idx;await sendData({type:'poll-vote',opt:idx});pollData.votes[idx]++;pollData.total++;document.querySelectorAll('.pvote-btn').forEach((b,i)=>b.classList.toggle('voted',i===idx));toast('Voto registrado ✓');}
 function receivePollVote(opt){if(!pollData)return;pollData.votes[opt]++;pollData.total++;if(document.getElementById('pollResults').style.display!=='none')renderResults();}
 function showPollResults(){document.getElementById('pollCreate').style.display='none';document.getElementById('pollVote').style.display='none';document.getElementById('pollResults').style.display='block';document.getElementById('pollTitle').textContent='📊 Resultados: '+pollData.q;renderResults();}
@@ -1477,208 +1449,3 @@ function copyReport(){navigator.clipboard.writeText(lastReportText).then(()=>toa
 function downloadReport(){if(!lastReportText){toast('No hay reporte');return;}const types=['reporte-gerencial','minuta-ejecutiva','resumen-rapido','action-items'];dl(lastReportText,'nexmeet-'+types[aiOptSelected]+'-'+new Date().toISOString().slice(0,10)+'.txt','text/plain');}
 
 // ══ VIRTUAL BACKGROUNDS ══
-
-// Photo URLs for realistic backgrounds (loaded once, cached)
-const VBG_PHOTOS = [
-  null, // slot 0 = blur (no image needed)
-  'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1280&q=85', // sala de directorio / boardroom
-  'https://images.unsplash.com/photo-1555421689-d68471e189f2?w=1280&q=85', // oficina ejecutiva minimalista
-  'https://images.unsplash.com/photo-1568992688065-536aad8a12f6?w=1280&q=85', // estudio con librería profesional
-  'https://images.unsplash.com/photo-1497366412874-3415097a27e7?w=1280&q=85', // sala de reuniones moderna
-  'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1280&q=85', // coworking / open office
-];
-const VBG_IMG_CACHE = {};
-
-function loadVBGPhoto(idx, cb) {
-  if (!VBG_PHOTOS[idx]) { cb(null); return; }
-  if (VBG_IMG_CACHE[idx]) { cb(VBG_IMG_CACHE[idx]); return; }
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = () => { VBG_IMG_CACHE[idx] = img; cb(img); };
-  img.onerror = () => cb(null);
-  img.src = VBG_PHOTOS[idx];
-}
-
-function drawPhotoOrFallback(idx, fallbackFn) {
-  return function(ctx, w, h) {
-    const img = VBG_IMG_CACHE[idx];
-    if (img) {
-      // cover fit
-      const scale = Math.max(w/img.naturalWidth, h/img.naturalHeight);
-      const sw = img.naturalWidth * scale, sh = img.naturalHeight * scale;
-      ctx.drawImage(img, (w-sw)/2, (h-sh)/2, sw, sh);
-    } else {
-      fallbackFn(ctx, w, h);
-      loadVBGPhoto(idx, () => loadVBGPreview()); // reload preview when loaded
-    }
-  };
-}
-
-const VBG_DEFS=[
-  {id:0,label:'🌫️ Desenfoque suave',draw:drawBlur},
-  {id:1,label:'🏛️ Sala de directorio',draw:drawPhotoOrFallback(1, drawOffice)},
-  {id:2,label:'💼 Oficina ejecutiva',draw:drawPhotoOrFallback(2, drawOffice)},
-  {id:3,label:'📚 Estudio profesional',draw:drawPhotoOrFallback(3, drawOffice)},
-  {id:4,label:'🏗️ Sala de reuniones',draw:drawPhotoOrFallback(4, drawOffice)},
-  {id:5,label:'🤝 Coworking / Startup',draw:drawPhotoOrFallback(5, drawOffice)},
-];
-// Pre-load all photos
-VBG_PHOTOS.forEach((url, i) => { if (url) loadVBGPhoto(i, () => {}); });
-
-function drawBlur(ctx,w,h){ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,w,h);ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText('Desenfoque de fondo',w/2,h/2);}
-function drawOffice(ctx,w,h){ctx.fillStyle='#c8b99a';ctx.fillRect(0,0,w,h);ctx.fillStyle='#8b6f47';ctx.fillRect(0,h*.75,w,h*.25);ctx.fillStyle='#87ceeb';ctx.fillRect(w*.05,h*.1,w*.22,h*.5);ctx.strokeStyle='#5a4a3a';ctx.lineWidth=3;ctx.strokeRect(w*.05,h*.1,w*.22,h*.5);ctx.fillStyle='#6b4c2a';ctx.fillRect(w*.75,h*.05,w*.22,h*.7);['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22'].forEach((c,i)=>{ctx.fillStyle=c;ctx.fillRect(w*.77+i*(w*.026),h*.08,w*.022,h*.3);});ctx.fillStyle='#27ae60';ctx.beginPath();ctx.ellipse(w*.48,h*.55,w*.09,h*.15,0,0,Math.PI*2);ctx.fill();}
-function drawNature(ctx,w,h){const sky=ctx.createLinearGradient(0,0,0,h*.55);sky.addColorStop(0,'#87CEEB');sky.addColorStop(1,'#E0F4FF');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h*.55);ctx.fillStyle='#FFD700';ctx.beginPath();ctx.arc(w*.8,h*.12,h*.07,0,Math.PI*2);ctx.fill();const ground=ctx.createLinearGradient(0,h*.55,0,h);ground.addColorStop(0,'#4CAF50');ground.addColorStop(1,'#2d5a27');ctx.fillStyle=ground;ctx.fillRect(0,h*.55,w,h*.45);[[w*.08,h,'#2e7d32'],[w*.92,h,'#1b5e20']].forEach(([x,h2,c])=>{ctx.fillStyle='#5D4037';ctx.fillRect(x-h2*.04,h*.55,h2*.08,h*.2);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(x,h*.18);ctx.lineTo(x-h2*.13,h*.55);ctx.lineTo(x+h2*.13,h*.55);ctx.closePath();ctx.fill();});}
-function drawCity(ctx,w,h){const sky=ctx.createLinearGradient(0,0,0,h*.6);sky.addColorStop(0,'#0a0a1a');sky.addColorStop(1,'#1a0a2e');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h*.6);for(let i=0;i<80;i++){ctx.fillStyle=`rgba(255,255,255,${Math.random()*.8+.2})`;ctx.beginPath();ctx.arc(Math.random()*w,Math.random()*h*.5,Math.random()*.8+.2,0,Math.PI*2);ctx.fill();}ctx.fillStyle='#0d0d0d';ctx.fillRect(0,h*.6,w,h*.4);[[0,h*.25,w*.15,h*.75],[w*.14,h*.15,w*.12,h*.75],[w*.72,h*.2,w*.13,h*.75],[w*.84,h*.1,w*.16,h*.75]].forEach(([x,y,bw,bh])=>{ctx.fillStyle='#111827';ctx.fillRect(x,y,bw,bh);});}
-function drawSpace(ctx,w,h){ctx.fillStyle='#050014';ctx.fillRect(0,0,w,h);for(let i=0;i<200;i++){ctx.fillStyle=`rgba(255,255,255,${Math.random()*.8+.2})`;ctx.beginPath();ctx.arc(Math.random()*w,Math.random()*h,Math.random()*1.5+.1,0,Math.PI*2);ctx.fill();}const neb=ctx.createRadialGradient(w*.2,h*.3,0,w*.2,h*.3,w*.35);neb.addColorStop(0,'rgba(0,229,195,.15)');neb.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=neb;ctx.fillRect(0,0,w,h);const p1=ctx.createRadialGradient(w*.75,h*.25,0,w*.75,h*.25,h*.12);p1.addColorStop(0,'#4fc3f7');p1.addColorStop(1,'#01579b');ctx.fillStyle=p1;ctx.beginPath();ctx.arc(w*.75,h*.25,h*.12,0,Math.PI*2);ctx.fill();}
-function drawAbstract(ctx,w,h){const bg=ctx.createLinearGradient(0,0,w,h);bg.addColorStop(0,'#0d0f14');bg.addColorStop(1,'#0a1628');ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);[{x:w*.15,y:h*.25,r:w*.4,c:'rgb(0,229,195)',a:.18},{x:w*.85,y:h*.75,r:w*.35,c:'rgb(0,153,255)',a:.15}].forEach(o=>{const g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);g.addColorStop(0,o.c.replace(')',`,${o.a})`).replace('rgb','rgba'));g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);});ctx.fillStyle='rgba(0,229,195,.06)';ctx.font=`bold ${h*.18}px 'Syne',sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('NexMeet',w*.5,h*.5);}
-function openVBG(){document.getElementById('vbgOverlay').classList.add('show');document.getElementById('moreWrap').classList.remove('open');buildVBGGrid();loadVBGPreview();}
-function closeVBG(){document.getElementById('vbgOverlay').classList.remove('show');}
-function buildVBGGrid(){const grid=document.getElementById('vbgGrid');grid.innerHTML='';VBG_DEFS.forEach((bg,i)=>{const div=document.createElement('div');div.className='vbg-opt'+(vbgSelected===i?' selected':'');div.id='vbgopt-'+i;div.onclick=()=>selectVBG(i);const cv=document.createElement('canvas');cv.width=160;cv.height=90;bg.draw(cv.getContext('2d'),160,90);const lbl=document.createElement('div');lbl.className='vbg-label';lbl.textContent=bg.label;div.append(cv,lbl);grid.appendChild(div);});}
-function selectVBG(idx){vbgSelected=idx;document.querySelectorAll('.vbg-opt').forEach((el,i)=>el.classList.toggle('selected',i===idx));loadVBGPreview();}
-function loadVBGPreview(){const cv=document.getElementById('vbgPreviewCanvas');cv.width=cv.offsetWidth||320;cv.height=cv.offsetHeight||130;VBG_DEFS[vbgSelected].draw(cv.getContext('2d'),cv.width,cv.height);document.getElementById('vbgLoading').style.display='none';}
-async function applyVBG(){
-  const camPub=room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
-  if(!camPub?.track){toast('Sin cámara activa');return;}
-  vbgOrigTrack=camPub.track.mediaStreamTrack;
-  document.getElementById('vbgLoading').style.display='block';document.getElementById('vbgLoading').textContent='Cargando modelo…';
-  try{
-    if(!vbgSegmenter){
-      await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js');
-      vbgSegmenter=new SelfieSegmentation({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/${f}`});
-      vbgSegmenter.setOptions({modelSelection:1});
-    }
-    const outCanvas=document.getElementById('vbgCanvas');
-    const videoEl=document.createElement('video');videoEl.srcObject=new MediaStream([vbgOrigTrack]);videoEl.play();
-    const bgCanvas=document.createElement('canvas');
-    videoEl.onloadedmetadata=()=>{
-      outCanvas.width=videoEl.videoWidth;outCanvas.height=videoEl.videoHeight;
-      bgCanvas.width=videoEl.videoWidth;bgCanvas.height=videoEl.videoHeight;
-      if(vbgSelected!==0)VBG_DEFS[vbgSelected].draw(bgCanvas.getContext('2d'),bgCanvas.width,bgCanvas.height);
-      outCanvas.style.display='block';vbgActive=true;
-      vbgSegmenter.onResults(results=>{
-        const ctx2=outCanvas.getContext('2d');ctx2.clearRect(0,0,outCanvas.width,outCanvas.height);
-        if(vbgSelected===0){ctx2.filter='blur(14px)';}ctx2.drawImage(videoEl,0,0,outCanvas.width,outCanvas.height);if(vbgSelected===0)ctx2.filter='none';
-        ctx2.globalCompositeOperation='destination-in';ctx2.drawImage(results.segmentationMask,0,0,outCanvas.width,outCanvas.height);
-        ctx2.globalCompositeOperation='destination-over';
-        if(vbgSelected===0){ctx2.filter='blur(14px)';ctx2.drawImage(videoEl,0,0,outCanvas.width,outCanvas.height);ctx2.filter='none';}
-        else ctx2.drawImage(bgCanvas,0,0,outCanvas.width,outCanvas.height);
-        ctx2.globalCompositeOperation='source-over';
-      });
-      async function loop(){if(!vbgActive)return;try{await vbgSegmenter.send({image:videoEl});}catch{}vbgAnimId=requestAnimationFrame(loop);}loop();
-      vbgCanvasStream=outCanvas.captureStream(25);
-      const newTrack=vbgCanvasStream.getVideoTracks()[0];
-      camPub.track.mediaStreamTrack=newTrack;
-      const sender=room.localParticipant.getTrack(LivekitClient.Track.Source.Camera)?.track?.sender;
-      if(sender)sender.replaceTrack(newTrack);
-      const myVid=document.querySelector('#vw-local video');if(myVid){const s=new MediaStream([newTrack]);myVid.srcObject=s;}
-      closeVBG();toast('Fondo virtual aplicado ✓');
-    };
-  }catch(e){toast('No se pudo aplicar: '+e.message);}
-  document.getElementById('vbgLoading').style.display='none';
-}
-function removeVBG(){
-  if(!vbgActive){closeVBG();return;}
-  vbgActive=false;cancelAnimationFrame(vbgAnimId);document.getElementById('vbgCanvas').style.display='none';
-  if(vbgOrigTrack){
-    const sender=room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera)?.track?.sender;
-    if(sender)sender.replaceTrack(vbgOrigTrack);
-    const myVid=document.querySelector('#vw-local video');if(myVid)myVid.srcObject=new MediaStream([vbgOrigTrack]);
-  }
-  closeVBG();toast('Fondo virtual desactivado');
-}
-function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`)){res();return;}const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
-
-// ══ UTILS ══
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
-function startTimer(){meetSecs=0;timerInt=setInterval(()=>{meetSecs++;const m=String(Math.floor(meetSecs/60)).padStart(2,'0');const s=String(meetSecs%60).padStart(2,'0');document.getElementById('mTimer').textContent=`${m}:${s}`;},1000);}
-function show(id){document.getElementById(id).style.display='flex';}
-function hide(id){document.getElementById(id).style.display='none';}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function dl(content,filename,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mime}));a.download=filename;a.click();}
-
-// ── FLIP CAMERA ──────────────────────────
-async function flipCamera() {
-  const btn = document.getElementById('ccFlip');
-  btn.style.opacity = '0.5';
-  try {
-    // Determine current facing mode
-    const camPub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
-    const currentTrack = camPub?.track?.mediaStreamTrack;
-    const currentFacing = currentTrack?.getSettings()?.facingMode || 'user';
-    const newFacing = currentFacing === 'user' ? 'environment' : 'user';
-
-    // Get new stream with opposite camera
-    const newStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: newFacing } },
-      audio: false
-    });
-    const newVideoTrack = newStream.getVideoTracks()[0];
-
-    // Replace track in LiveKit
-    if (camPub?.track) {
-      await camPub.track.replaceTrack(newVideoTrack, true);
-      // Update local preview
-      const myVid = document.querySelector('#vw-local video');
-      if (myVid) {
-        const ms = new MediaStream([newVideoTrack]);
-        myVid.srcObject = ms;
-      }
-      toast('Cámara cambiada ✓');
-    } else {
-      toast('Sin cámara activa');
-    }
-  } catch(e) {
-    toast('No se pudo cambiar: ' + e.message);
-  }
-  btn.style.opacity = '1';
-}
-
-
-// ── HAND ALERT para el host ─────────────────
-const handRaisers = new Map(); // name -> alertEl
-function showHandAlert(name) {
-  if (handRaisers.has(name)) return;
-  const container = document.getElementById('handAlerts');
-  const el = document.createElement('div');
-  el.className = 'hand-alert';
-  el.innerHTML = `✋ <strong>${esc(name)}</strong> levantó la mano`;
-  container.appendChild(el);
-  handRaisers.set(name, el);
-  // Auto-dismiss after 8s
-  setTimeout(() => dismissHandAlert(name), 8000);
-}
-function dismissHandAlert(name) {
-  const el = handRaisers.get(name);
-  if (el) { el.remove(); handRaisers.delete(name); }
-}
-
-
-function wDebug(msg) {
-  const el = document.getElementById('wDebug');
-  if (el) el.innerHTML += new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ' ' + msg + '<br>';
-  console.log('[WR]', msg);
-}
-
-// ── MOBILE VIEWPORT FIX ──────────────────────────
-function fixMobileViewport() {
-  // Set --vh to actual visible height (excludes browser chrome + OS nav bar)
-  const vh = window.innerHeight;
-  document.documentElement.style.setProperty('--real-vh', vh + 'px');
-  const meeting = document.getElementById('meeting');
-  if (meeting && meeting.style.display !== 'none') {
-    meeting.style.height = vh + 'px';
-  }
-  // Add bottom padding to cbar equal to difference between screen and viewport
-  const navBarHeight = window.screen.height - window.outerHeight;
-  const extraPad = Math.max(0, window.outerHeight - window.innerHeight - 60);
-  const cbar = document.querySelector('.cbar');
-  if (cbar) cbar.style.paddingBottom = Math.max(10, Math.min(extraPad, 80)) + 'px';
-}
-window.addEventListener('resize', fixMobileViewport);
-window.addEventListener('load', fixMobileViewport);
-// Also fix when entering meeting
-const _origEnterMeeting = typeof enterMeeting === 'function' ? enterMeeting : null;
-
-</script>
-</body>
-</html>
