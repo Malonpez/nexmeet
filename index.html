@@ -4,7 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NexMeet — Video Conferencias Privadas</title>
-<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.5.3/dist/livekit-client.umd.min.js"></script>
+<script>
+// LiveKit SDK loader with fallbacks
+(function(){
+  var cdns = [
+    'https://cdn.jsdelivr.net/npm/livekit-client@1.15.7/dist/livekit-client.umd.js',
+    'https://unpkg.com/livekit-client@1.15.7/dist/livekit-client.umd.js',
+    'https://cdn.jsdelivr.net/npm/livekit-client@1.15.3/dist/livekit-client.umd.js',
+    'https://cdn.jsdelivr.net/npm/livekit-client@1.14.0/dist/livekit-client.umd.js',
+  ];
+  var idx = 0;
+  function tryNext() {
+    if (idx >= cdns.length) {
+      document.getElementById('lStatus').textContent = 'Error: No se pudo cargar el SDK de video. Recarga la página.';
+      document.getElementById('lStatus').className = 'err';
+      return;
+    }
+    var s = document.createElement('script');
+    s.src = cdns[idx++];
+    s.onload = function() {
+      if (typeof LivekitClient === 'undefined') { tryNext(); return; }
+      console.log('LiveKit SDK cargado desde:', s.src);
+    };
+    s.onerror = function() { tryNext(); };
+    document.head.appendChild(s);
+  }
+  tryNext();
+})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f14;--surface:#161a22;--s2:#1e2330;--border:#2a3040;--accent:#00e5c3;--a2:#0099ff;--danger:#ff4757;--warn:#ffa502;--green:#2ed573;--text:#e8eaf0;--muted:#6b7590;--vbg:#0a0c10;}
@@ -322,6 +349,14 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 /* TOAST */
 .toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:.55rem 1.05rem;font-size:.8rem;color:var(--text);opacity:0;pointer-events:none;transition:opacity .28s;z-index:9999;white-space:nowrap;}
 .toast.show{opacity:1;}
+
+/* HAND BADGE en video */
+.hand-badge{position:absolute;top:6px;right:6px;font-size:1.6rem;background:rgba(0,0,0,.6);border-radius:8px;padding:.1rem .35rem;z-index:15;animation:handPop .4s ease;}
+@keyframes handPop{0%{transform:scale(0)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+/* HAND ALERT banner host */
+#handAlerts{position:fixed;top:68px;left:50%;transform:translateX(-50%);z-index:600;display:flex;flex-direction:column;gap:.4rem;align-items:center;pointer-events:none;}
+.hand-alert{background:var(--warn);color:#000;border-radius:10px;padding:.5rem 1.1rem;font-size:.85rem;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:slideDown .3s ease;pointer-events:auto;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -352,6 +387,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 <!-- MEETING -->
 <div id="meeting">
   <div id="wQueue"></div>
+  <div id="handAlerts"></div>
   <div class="tbar">
     <div class="tbrand">Nex<span>Meet</span></div>
     <div class="rbadge"><span>Sala:</span><strong id="dispRoom">…</strong><button class="cbtn" onclick="copyInviteLink()">⎘ Invitar</button></div>
@@ -433,6 +469,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
   <div class="cbar">
     <button class="cc" id="ccMic" onclick="toggleMic()"><div class="ci">🎤</div><div class="cl">Micro</div></button>
     <button class="cc" id="ccCam" onclick="toggleCam()"><div class="ci">📷</div><div class="cl">Cámara</div></button>
+    <button class="cc" id="ccFlip" onclick="flipCamera()" title="Cambiar cámara"><div class="ci">🔄</div><div class="cl">Girar</div></button>
     <button class="cc" id="ccScreen" onclick="toggleScreen()"><div class="ci">🖥️</div><div class="cl">Pantalla</div></button>
     <button class="cc" id="ccHand" onclick="toggleHand()"><div class="ci">✋</div><div class="cl">Mano</div></button>
     <div class="cdiv"></div>
@@ -811,25 +848,46 @@ function handleDataMsg(msg, participant) {
       break;
     case 'notes':
       const ta = document.getElementById('notesArea');
-      if (ta.value !== msg.text) ta.value = msg.text;
-      document.getElementById('notesStat').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es', {hour:'2-digit',minute:'2-digit'});
+      if (ta.value !== msg.text) {
+        ta.value = msg.text;
+        document.getElementById('notesStat').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es', {hour:'2-digit',minute:'2-digit'});
+        if (activePanel !== 'notes') toast('📝 Notas actualizadas — abre el panel Notas');
+      }
       break;
     case 'agenda':
       agendaText = msg.text;
       document.getElementById('agendaInput').value = msg.text;
       const av = document.getElementById('agendaViewWov');
       if (agendaText) { av.style.display = 'block'; av.textContent = agendaText; }
+      toast('📋 Agenda actualizada por el organizador');
       break;
     case 'reaction':
       showReaction(msg.emoji, msg.x || 50);
       break;
     case 'hand':
+      const hName = participant?.identity || 'Alguien';
       const lbl = document.getElementById('lbl-vw-' + (participant?.sid || ''));
       if (lbl) {
         const hi = lbl.querySelector('.hand-ind');
         if (hi) hi.style.display = msg.raised ? 'inline' : 'none';
       }
-      addSys((participant?.identity || 'Alguien') + ' ' + (msg.raised ? 'levantó ✋' : 'bajó la mano'));
+      // Big visible hand badge on video tile
+      const vwrap = document.getElementById('vw-' + (participant?.sid || ''));
+      if (vwrap) {
+        let hbadge = vwrap.querySelector('.hand-badge');
+        if (msg.raised) {
+          if (!hbadge) {
+            hbadge = document.createElement('div');
+            hbadge.className = 'hand-badge';
+            hbadge.textContent = '✋';
+            vwrap.appendChild(hbadge);
+          }
+        } else { hbadge && hbadge.remove(); }
+      }
+      // Persistent host notification
+      if (msg.raised && isHost) showHandAlert(hName);
+      else if (!msg.raised) dismissHandAlert(hName);
+      addSys(hName + ' ' + (msg.raised ? 'levantó ✋ la mano' : 'bajó la mano'));
       break;
     case 'doc-share':
       receiveDoc(msg.doc);
@@ -1045,6 +1103,13 @@ async function toggleHand() {
   handRaised = !handRaised;
   await sendData({ type: 'hand', raised: handRaised });
   document.getElementById('ccHand').classList.toggle('on', handRaised);
+  // Show/hide badge on own tile
+  const myWrap = document.getElementById('vw-local');
+  if (myWrap) {
+    let hb = myWrap.querySelector('.hand-badge');
+    if (handRaised) { if (!hb) { hb = document.createElement('div'); hb.className = 'hand-badge'; hb.textContent = '✋'; myWrap.appendChild(hb); } }
+    else { hb && hb.remove(); }
+  }
   toast(handRaised ? 'Mano levantada ✋' : 'Mano bajada');
 }
 async function muteRemote(sid) {
@@ -1272,7 +1337,8 @@ async function launchPoll() {
   if(opts.length<2){toast('Agrega al menos 2 opciones');return;}
   pollData={q,opts,votes:opts.map(()=>0),total:0};
   await sendData({type:'poll-launch',poll:{q,opts}});
-  showPollResults(); closePoll(); toast('Encuesta lanzada 🚀');
+  showPollResults(); /* keep overlay open so host sees results */
+  toast('Encuesta lanzada 🚀 — el overlay muestra resultados en vivo');
 }
 function receivePoll(p){pollData={q:p.q,opts:p.opts,votes:p.opts.map(()=>0),total:0};showPollVote();document.getElementById('pollOverlay').classList.add('show');}
 function showPollVote(){document.getElementById('pollTitle').textContent='📊 '+pollData.q;document.getElementById('pollCreate').style.display='none';const vd=document.getElementById('pollVote');vd.style.display='block';vd.innerHTML=pollData.opts.map((o,i)=>`<button class="pvote-btn" id="pvote-${i}" onclick="castVote(${i})">${esc(o)}</button>`).join('');}
@@ -1345,7 +1411,54 @@ function copyReport(){navigator.clipboard.writeText(lastReportText).then(()=>toa
 function downloadReport(){if(!lastReportText){toast('No hay reporte');return;}const types=['reporte-gerencial','minuta-ejecutiva','resumen-rapido','action-items'];dl(lastReportText,'nexmeet-'+types[aiOptSelected]+'-'+new Date().toISOString().slice(0,10)+'.txt','text/plain');}
 
 // ══ VIRTUAL BACKGROUNDS ══
-const VBG_DEFS=[{id:0,label:'🌫️ Desenfoque',draw:drawBlur},{id:1,label:'🏢 Oficina',draw:drawOffice},{id:2,label:'🌿 Naturaleza',draw:drawNature},{id:3,label:'🌃 Ciudad',draw:drawCity},{id:4,label:'🌌 Espacio',draw:drawSpace},{id:5,label:'🎨 Abstracto',draw:drawAbstract}];
+
+// Photo URLs for realistic backgrounds (loaded once, cached)
+const VBG_PHOTOS = [
+  null, // slot 0 = blur (no image needed)
+  'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1280&q=80', // oficina moderna
+  'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=1280&q=80', // biblioteca
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1280&q=80', // living room
+  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1280&q=80', // bosque
+  'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1280&q=80', // ciudad noche
+];
+const VBG_IMG_CACHE = {};
+
+function loadVBGPhoto(idx, cb) {
+  if (!VBG_PHOTOS[idx]) { cb(null); return; }
+  if (VBG_IMG_CACHE[idx]) { cb(VBG_IMG_CACHE[idx]); return; }
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => { VBG_IMG_CACHE[idx] = img; cb(img); };
+  img.onerror = () => cb(null);
+  img.src = VBG_PHOTOS[idx];
+}
+
+function drawPhotoOrFallback(idx, fallbackFn) {
+  return function(ctx, w, h) {
+    const img = VBG_IMG_CACHE[idx];
+    if (img) {
+      // cover fit
+      const scale = Math.max(w/img.naturalWidth, h/img.naturalHeight);
+      const sw = img.naturalWidth * scale, sh = img.naturalHeight * scale;
+      ctx.drawImage(img, (w-sw)/2, (h-sh)/2, sw, sh);
+    } else {
+      fallbackFn(ctx, w, h);
+      loadVBGPhoto(idx, () => loadVBGPreview()); // reload preview when loaded
+    }
+  };
+}
+
+const VBG_DEFS=[
+  {id:0,label:'🌫️ Desenfoque',draw:drawBlur},
+  {id:1,label:'🏢 Oficina moderna',draw:drawPhotoOrFallback(1, drawOffice)},
+  {id:2,label:'📚 Biblioteca',draw:drawPhotoOrFallback(2, drawOffice)},
+  {id:3,label:'🛋️ Living room',draw:drawPhotoOrFallback(3, drawNature)},
+  {id:4,label:'🌿 Bosque',draw:drawPhotoOrFallback(4, drawNature)},
+  {id:5,label:'🌃 Ciudad noche',draw:drawPhotoOrFallback(5, drawCity)},
+];
+// Pre-load all photos
+VBG_PHOTOS.forEach((url, i) => { if (url) loadVBGPhoto(i, () => {}); });
+
 function drawBlur(ctx,w,h){ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,w,h);ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText('Desenfoque de fondo',w/2,h/2);}
 function drawOffice(ctx,w,h){ctx.fillStyle='#c8b99a';ctx.fillRect(0,0,w,h);ctx.fillStyle='#8b6f47';ctx.fillRect(0,h*.75,w,h*.25);ctx.fillStyle='#87ceeb';ctx.fillRect(w*.05,h*.1,w*.22,h*.5);ctx.strokeStyle='#5a4a3a';ctx.lineWidth=3;ctx.strokeRect(w*.05,h*.1,w*.22,h*.5);ctx.fillStyle='#6b4c2a';ctx.fillRect(w*.75,h*.05,w*.22,h*.7);['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22'].forEach((c,i)=>{ctx.fillStyle=c;ctx.fillRect(w*.77+i*(w*.026),h*.08,w*.022,h*.3);});ctx.fillStyle='#27ae60';ctx.beginPath();ctx.ellipse(w*.48,h*.55,w*.09,h*.15,0,0,Math.PI*2);ctx.fill();}
 function drawNature(ctx,w,h){const sky=ctx.createLinearGradient(0,0,0,h*.55);sky.addColorStop(0,'#87CEEB');sky.addColorStop(1,'#E0F4FF');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h*.55);ctx.fillStyle='#FFD700';ctx.beginPath();ctx.arc(w*.8,h*.12,h*.07,0,Math.PI*2);ctx.fill();const ground=ctx.createLinearGradient(0,h*.55,0,h);ground.addColorStop(0,'#4CAF50');ground.addColorStop(1,'#2d5a27');ctx.fillStyle=ground;ctx.fillRect(0,h*.55,w,h*.45);[[w*.08,h,'#2e7d32'],[w*.92,h,'#1b5e20']].forEach(([x,h2,c])=>{ctx.fillStyle='#5D4037';ctx.fillRect(x-h2*.04,h*.55,h2*.08,h*.2);ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(x,h*.18);ctx.lineTo(x-h2*.13,h*.55);ctx.lineTo(x+h2*.13,h*.55);ctx.closePath();ctx.fill();});}
@@ -1416,6 +1529,63 @@ function show(id){document.getElementById(id).style.display='flex';}
 function hide(id){document.getElementById(id).style.display='none';}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function dl(content,filename,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mime}));a.download=filename;a.click();}
+
+// ── FLIP CAMERA ──────────────────────────
+async function flipCamera() {
+  const btn = document.getElementById('ccFlip');
+  btn.style.opacity = '0.5';
+  try {
+    // Determine current facing mode
+    const camPub = room?.localParticipant?.getTrackPublication(LivekitClient.Track.Source.Camera);
+    const currentTrack = camPub?.track?.mediaStreamTrack;
+    const currentFacing = currentTrack?.getSettings()?.facingMode || 'user';
+    const newFacing = currentFacing === 'user' ? 'environment' : 'user';
+
+    // Get new stream with opposite camera
+    const newStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: newFacing } },
+      audio: false
+    });
+    const newVideoTrack = newStream.getVideoTracks()[0];
+
+    // Replace track in LiveKit
+    if (camPub?.track) {
+      await camPub.track.replaceTrack(newVideoTrack, true);
+      // Update local preview
+      const myVid = document.querySelector('#vw-local video');
+      if (myVid) {
+        const ms = new MediaStream([newVideoTrack]);
+        myVid.srcObject = ms;
+      }
+      toast('Cámara cambiada ✓');
+    } else {
+      toast('Sin cámara activa');
+    }
+  } catch(e) {
+    toast('No se pudo cambiar: ' + e.message);
+  }
+  btn.style.opacity = '1';
+}
+
+
+// ── HAND ALERT para el host ─────────────────
+const handRaisers = new Map(); // name -> alertEl
+function showHandAlert(name) {
+  if (handRaisers.has(name)) return;
+  const container = document.getElementById('handAlerts');
+  const el = document.createElement('div');
+  el.className = 'hand-alert';
+  el.innerHTML = `✋ <strong>${esc(name)}</strong> levantó la mano`;
+  container.appendChild(el);
+  handRaisers.set(name, el);
+  // Auto-dismiss after 8s
+  setTimeout(() => dismissHandAlert(name), 8000);
+}
+function dismissHandAlert(name) {
+  const el = handRaisers.get(name);
+  if (el) { el.remove(); handRaisers.delete(name); }
+}
+
 </script>
 </body>
 </html>
