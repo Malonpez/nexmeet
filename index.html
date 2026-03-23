@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NexMeet">
+<meta name="theme-color" content="#0d0f14">
+<link rel="manifest" href="manifest.json">
 <title>NexMeet — Video Conferencias Privadas</title>
 <script>
 // LiveKit SDK loader with fallbacks
@@ -446,7 +452,7 @@ body.is-host .host-only { display: flex; }
 
 <!-- SPECIAL SCREENS -->
 <div id="expiredScreen"><div style="font-size:3.5rem">⏰</div><h2 style="font-family:Syne,sans-serif;color:var(--danger)">Link expirado</h2><p style="color:var(--muted)">Solicita un nuevo link al organizador.</p></div>
-<div id="waitingRoom"><div class="wspin"></div><h2 style="font-family:Syne,sans-serif">Sala de espera</h2><p style="color:var(--muted)">El organizador te admitirá en breve.</p><div class="wbadge" id="wNameBadge"></div><div id="wDebug" style="margin-top:1rem;font-size:.7rem;color:#0ff;background:rgba(0,0,0,.5);padding:.5rem;border-radius:6px;max-width:320px;text-align:left;min-height:40px;word-break:break-all;"></div><button onclick="enterMeeting()" style="margin-top:1rem;padding:.6rem 1.4rem;background:#0f0;color:#000;border:none;border-radius:8px;font-weight:700;font-size:.9rem;cursor:pointer;">▶ Entrar manualmente</button></div>
+<div id="waitingRoom"><div class="wspin"></div><h2 style="font-family:Syne,sans-serif">Sala de espera</h2><p style="color:var(--muted)">El organizador te admitirá en breve.</p><div class="wbadge" id="wNameBadge"></div></div>
 <div id="rejectedScreen"><div style="font-size:3.5rem">🚫</div><h2 style="font-family:Syne,sans-serif;color:var(--danger)">Acceso denegado</h2><p style="color:var(--muted)">El organizador no admitió tu ingreso.</p></div>
 
 <!-- LOBBY -->
@@ -1001,12 +1007,10 @@ function handleDataMsg(msg, participant) {
       showKnock(participant?.sid || 'unknown', msg.name || participant?.identity || 'Invitado');
       break;
     case 'admitted':
-      wDebug('admitted! forId=' + msg.forIdentity + ' myName=' + myName + ' isHost=' + isHost);
-      // Accept if for us specifically OR if broadcast (no forIdentity)
-      if (msg.forIdentity && msg.forIdentity !== myName) { wDebug('BLOCKED by forIdentity'); break; }
-      if (isHost) { wDebug('BLOCKED: isHost'); break; }
+      // Accept if for us or broadcast — reject if for someone else
+      if (msg.forIdentity && msg.forIdentity !== myName) break;
+      if (isHost) break;
       if (window._knockInterval) clearInterval(window._knockInterval);
-      wDebug('ENTERING MEETING');
       hide('waitingRoom');
       enterMeeting();
       setTimeout(() => { applyE2EEToRoom(); updateE2EEBadge(); }, 1000);
