@@ -970,7 +970,7 @@ function attachLocalVideo() {
     grid.appendChild(wrap);
     updateGrid();
   }
-  const camPub = room?.localParticipant?.getTrackPublication(LivekitClient.Track.Source.Camera);
+  const camPub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
   if (camPub?.track) {
     const vid = wrap.querySelector('video');
     camPub.track.attach(vid);
@@ -1028,7 +1028,7 @@ async function toggleScreen() {
       toast('Compartiendo pantalla…');
 
       // Build SS layout
-      const ssPub = room.localParticipant.getTrackPublication(LivekitClient.Track.Source.ScreenShare);
+      const ssPub = room.localParticipant.getTrack(LivekitClient.Track.Source.ScreenShare);
       if (ssPub?.track) buildSSLayout('local', myName, ssPub.track);
 
       // Stop when user stops sharing from browser
@@ -1275,7 +1275,7 @@ function exportNotes() {
 function toggleRec() {
   if (!isRecording) {
     try {
-      const stream = room.localParticipant.getTrackPublication(LivekitClient.Track.Source.Camera)?.track?.mediaStream;
+      const stream = room.localParticipant.getTrack(LivekitClient.Track.Source.Camera)?.track?.mediaStream;
       if (!stream) { toast('Sin stream de video'); return; }
       recorder = new MediaRecorder(stream, {mimeType:'video/webm;codecs=vp9,opus'});
       recChunks = [];
@@ -1471,7 +1471,7 @@ function buildVBGGrid(){const grid=document.getElementById('vbgGrid');grid.inner
 function selectVBG(idx){vbgSelected=idx;document.querySelectorAll('.vbg-opt').forEach((el,i)=>el.classList.toggle('selected',i===idx));loadVBGPreview();}
 function loadVBGPreview(){const cv=document.getElementById('vbgPreviewCanvas');cv.width=cv.offsetWidth||320;cv.height=cv.offsetHeight||130;VBG_DEFS[vbgSelected].draw(cv.getContext('2d'),cv.width,cv.height);document.getElementById('vbgLoading').style.display='none';}
 async function applyVBG(){
-  const camPub=room?.localParticipant?.getTrackPublication(LivekitClient.Track.Source.Camera);
+  const camPub=room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
   if(!camPub?.track){toast('Sin cámara activa');return;}
   vbgOrigTrack=camPub.track.mediaStreamTrack;
   document.getElementById('vbgLoading').style.display='block';document.getElementById('vbgLoading').textContent='Cargando modelo…';
@@ -1502,7 +1502,7 @@ async function applyVBG(){
       vbgCanvasStream=outCanvas.captureStream(25);
       const newTrack=vbgCanvasStream.getVideoTracks()[0];
       camPub.track.mediaStreamTrack=newTrack;
-      const sender=room.localParticipant.getTrackPublication(LivekitClient.Track.Source.Camera)?.track?.sender;
+      const sender=room.localParticipant.getTrack(LivekitClient.Track.Source.Camera)?.track?.sender;
       if(sender)sender.replaceTrack(newTrack);
       const myVid=document.querySelector('#vw-local video');if(myVid){const s=new MediaStream([newTrack]);myVid.srcObject=s;}
       closeVBG();toast('Fondo virtual aplicado ✓');
@@ -1514,7 +1514,7 @@ function removeVBG(){
   if(!vbgActive){closeVBG();return;}
   vbgActive=false;cancelAnimationFrame(vbgAnimId);document.getElementById('vbgCanvas').style.display='none';
   if(vbgOrigTrack){
-    const sender=room?.localParticipant?.getTrackPublication(LivekitClient.Track.Source.Camera)?.track?.sender;
+    const sender=room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera)?.track?.sender;
     if(sender)sender.replaceTrack(vbgOrigTrack);
     const myVid=document.querySelector('#vw-local video');if(myVid)myVid.srcObject=new MediaStream([vbgOrigTrack]);
   }
@@ -1536,7 +1536,7 @@ async function flipCamera() {
   btn.style.opacity = '0.5';
   try {
     // Determine current facing mode
-    const camPub = room?.localParticipant?.getTrackPublication(LivekitClient.Track.Source.Camera);
+    const camPub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
     const currentTrack = camPub?.track?.mediaStreamTrack;
     const currentFacing = currentTrack?.getSettings()?.facingMode || 'user';
     const newFacing = currentFacing === 'user' ? 'environment' : 'user';
