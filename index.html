@@ -458,12 +458,12 @@ body.is-host .host-only { display: flex; }
 <div id="intro">
   <div class="intro-logo">Nex<span>Meet</span></div>
   <div class="intro-line"></div>
-  <div class="intro-tag">Videoconferencias privadas · cifradas</div>
+  <div class="intro-tag">Privado por diseño. Seguro por defecto.</div>
 </div>
 
 <div id="lobby">
   <div class="logo">Nex<span>Meet</span></div>
-  <div class="tagline">Videoconferencias privadas · cifradas · servidores en Australia</div>
+  <div class="tagline">Privado por diseño. Seguro por defecto.</div>
   <div class="lcard">
     <div class="inv-banner" id="invBanner">
       <div style="font-size:1.4rem">🔗</div>
@@ -773,15 +773,18 @@ function fmtExpiry(ms) {
 
 // ══ INIT ══
 window.onload = () => {
-  // Hide lobby during intro
-  document.getElementById('lobby').style.visibility = 'hidden';
-  // After 3s animate out and show lobby
-  setTimeout(() => {
-    const intro = document.getElementById('intro');
+  // Intro sequence
+  const lobby = document.getElementById('lobby');
+  const intro = document.getElementById('intro');
+  lobby.style.visibility = 'hidden';
+  function dismissIntro() {
     intro.classList.add('fade-out');
-    document.getElementById('lobby').style.visibility = '';
-    setTimeout(() => intro.style.display = 'none', 850);
-  }, 3000);
+    lobby.style.visibility = '';
+    setTimeout(() => { intro.style.display = 'none'; }, 850);
+  }
+  // Auto-dismiss after 3s — click also dismisses
+  const t = setTimeout(dismissIntro, 3000);
+  intro.addEventListener('click', () => { clearTimeout(t); dismissIntro(); });
 
   const parsed = parseHash();
   if (parsed) {
