@@ -1379,7 +1379,7 @@ async function toggleHand() {
 }
 async function muteRemote(sid) {
   const p = [...room.remoteParticipants.values()].find(p => p.sid === sid);
-  if (p) { await sendData({ type: 'mute-you' }); toast('Participante silenciado'); }
+  if (p) { await sendData({ type: 'mute-you', forIdentity: p.identity }); toast('Participante silenciado'); }
 }
 async function kickRemote(sid) {
   const p = [...room.remoteParticipants.values()].find(p => p.sid === sid);
