@@ -1121,15 +1121,7 @@ function handleDataMsg(msg, participant) {
       break;
     case 'mute-you':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
-      if (!isMuted) {
-        isMuted = true;
-        // Works for both native mic and custom published audio tracks
-        room.localParticipant.setMicrophoneEnabled(false).catch(()=>{});
-        const micPub = room.localParticipant.getTrack(LivekitClient.Track.Source.Microphone);
-        if (micPub?.track?.mediaStreamTrack) micPub.track.mediaStreamTrack.enabled = false;
-        updateMicBtn();
-        toast('El host te silenció');
-      }
+      if (!isMuted) { isMuted = true; room.localParticipant.setMicrophoneEnabled(false); updateMicBtn(); toast('El host te silenció'); }
       break;
     case 'kick':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
@@ -1349,9 +1341,7 @@ function endSSLayout() {
 // ══ CONTROLS ══
 async function toggleMic() {
   isMuted = !isMuted;
-  await room.localParticipant.setMicrophoneEnabled(!isMuted).catch(()=>{});
-  const micPub = room.localParticipant.getTrack(LivekitClient.Track.Source.Microphone);
-  if (micPub?.track?.mediaStreamTrack) micPub.track.mediaStreamTrack.enabled = !isMuted;
+  await room.localParticipant.setMicrophoneEnabled(!isMuted);
   updateMicBtn();
 }
 function updateMicBtn() {
