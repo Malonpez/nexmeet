@@ -1032,6 +1032,7 @@ function handleDataMsg(msg, participant) {
             video: { facingMode: { ideal: 'user' } },
             audio: { echoCancellation: true, noiseSuppression: true }
           });
+          window._localStream = _s; // store for local preview
           await room.localParticipant.publishTrack(_s.getVideoTracks()[0]);
           await room.localParticipant.publishTrack(_s.getAudioTracks()[0]);
         } catch(e) {
@@ -1220,11 +1221,17 @@ function attachLocalVideo() {
     grid.appendChild(wrap);
     updateGrid();
   }
+  const vid = wrap.querySelector('video');
+  // Use stored stream directly if available (guest admitted path)
+  if (window._localStream) {
+    vid.srcObject = window._localStream;
+    vid.play().catch(()=>{});
+    document.getElementById('voff-vw-local')?.classList.remove('show');
+    return;
+  }
   const camPub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
   if (camPub?.track) {
-    const vid = wrap.querySelector('video');
     camPub.track.attach(vid);
-    // Fallback for mobile where attach() alone may not render
     const mst = camPub.track.mediaStreamTrack;
     if (mst) { vid.srcObject = new MediaStream([mst]); vid.play().catch(()=>{}); }
     document.getElementById('voff-vw-local')?.classList.remove('show');
@@ -1358,14 +1365,15 @@ async function toggleCam() {
           video: { facingMode: { ideal: 'user' } }, audio: false
         });
         const newTrack = _s.getVideoTracks()[0];
+        window._localStream = new MediaStream([newTrack]);
         const camPub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
         if (camPub?.track) {
           await camPub.track.replaceTrack(newTrack, true);
-          const vid = document.querySelector('#vw-local video');
-          if (vid) { vid.srcObject = new MediaStream([newTrack]); vid.play().catch(()=>{}); }
         } else {
           await room.localParticipant.publishTrack(newTrack);
         }
+        const vid = document.querySelector('#vw-local video');
+        if (vid) { vid.srcObject = window._localStream; vid.play().catch(()=>{}); }
       } catch { await room.localParticipant.setCameraEnabled(true); }
     } else {
       await room.localParticipant.setCameraEnabled(true);
