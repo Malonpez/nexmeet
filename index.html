@@ -877,27 +877,27 @@ async function joinLiveKit(rid, name, host) {
 
     await room.connect(LK_URL, token);
 
-    // Publish tracks
-    const _isMobile = /Mobi|Android|iPhone|iPad/.test(navigator.userAgent);
-    if (_isMobile) {
-      try {
-        const _s = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'user' } },
-          audio: { echoCancellation: true, noiseSuppression: true }
-        });
-        window._currentFacing = 'user';
-        await room.localParticipant.publishTrack(_s.getVideoTracks()[0]);
-        await room.localParticipant.publishTrack(_s.getAudioTracks()[0]);
-      } catch { await room.localParticipant.enableCameraAndMicrophone(); }
-    } else {
-      await room.localParticipant.enableCameraAndMicrophone();
-    }
-
     if (host) {
+      // Host publishes tracks immediately
+      const _isMobile = /Mobi|Android|iPhone|iPad/.test(navigator.userAgent);
+      if (_isMobile) {
+        try {
+          const _s = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'user' } },
+            audio: { echoCancellation: true, noiseSuppression: true }
+          });
+          window._currentFacing = 'user';
+          await room.localParticipant.publishTrack(_s.getVideoTracks()[0]);
+          await room.localParticipant.publishTrack(_s.getAudioTracks()[0]);
+        } catch { await room.localParticipant.enableCameraAndMicrophone(); }
+      } else {
+        await room.localParticipant.enableCameraAndMicrophone();
+      }
       enterMeeting();
       setWov(true);
       setTimeout(() => { applyE2EEToRoom(); updateE2EEBadge(); }, 1000);
     } else {
+      // Guest does NOT publish camera/mic until admitted — only data channel
       // Send knock — retry every 3s until admitted (host DataReceived may not be ready instantly)
       const enc = new TextEncoder();
       const knockMsg = enc.encode(JSON.stringify({ type: 'knock', name }));
@@ -1025,6 +1025,22 @@ function handleDataMsg(msg, participant) {
       if (msg.forIdentity && msg.forIdentity !== myName) break;
       if (isHost) break;
       if (window._knockInterval) clearInterval(window._knockInterval);
+      // Now publish camera and mic (guest was muted while waiting)
+      (async () => {
+        try {
+          const _isMob = /Mobi|Android|iPhone|iPad/.test(navigator.userAgent);
+          if (_isMob) {
+            const _s = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: { ideal: 'user' } },
+              audio: { echoCancellation: true, noiseSuppression: true }
+            });
+            await room.localParticipant.publishTrack(_s.getVideoTracks()[0]);
+            await room.localParticipant.publishTrack(_s.getAudioTracks()[0]);
+          } else {
+            await room.localParticipant.enableCameraAndMicrophone();
+          }
+        } catch(e) { console.warn('publish on admit failed:', e); }
+      })();
       hide('waitingRoom');
       enterMeeting();
       setTimeout(() => { applyE2EEToRoom(); updateE2EEBadge(); }, 1000);
@@ -1193,7 +1209,8 @@ function enterMeeting() {
   setTimeout(fixMobileViewport, 100);
   // host-only items controlled by CSS .is-host class on body
   document.getElementById('dispRoom').textContent = roomId.slice(0, 10) + '…';
-  attachLocalVideo();
+  // Small delay for guests so publishTrack completes before attachLocalVideo
+  setTimeout(attachLocalVideo, isHost ? 0 : 800);
   startTimer();
   updateChatSel();
 }
@@ -1211,24 +1228,21 @@ function attachLocalVideo() {
   vid.playsInline = true;
   vid.muted = true;
 
-  // Use getUserMedia directly for local preview — most reliable across all browsers
-  const isMob = /Mobi|Android|iPhone|iPad/.test(navigator.userAgent);
-  navigator.mediaDevices.getUserMedia({
-    video: { facingMode: { ideal: isMob ? 'user' : undefined } },
-    audio: false
-  }).then(stream => {
-    vid.srcObject = stream;
-    vid.play().catch(() => {});
-    document.getElementById('voff-vw-local')?.classList.remove('show');
-  }).catch(() => {
-    // Fallback to LiveKit track
+  // Read track already published by LiveKit — do NOT open a new getUserMedia
+  let attempts = 0;
+  const tryAttach = () => {
     const camPub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
-    if (camPub?.track?.mediaStreamTrack) {
-      vid.srcObject = new MediaStream([camPub.track.mediaStreamTrack]);
+    const mst = camPub?.track?.mediaStreamTrack;
+    if (mst && mst.readyState === 'live') {
+      vid.srcObject = new MediaStream([mst]);
       vid.play().catch(() => {});
       document.getElementById('voff-vw-local')?.classList.remove('show');
+    } else if (attempts < 20) {
+      attempts++;
+      setTimeout(tryAttach, 300);
     }
-  });
+  };
+  tryAttach();
 }
 
 function attachVideo(sid, name, track) {
