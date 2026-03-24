@@ -1345,8 +1345,32 @@ function updateMicBtn() {
 }
 async function toggleCam() {
   isVideoOff = !isVideoOff;
-  await room.localParticipant.setCameraEnabled(!isVideoOff);
   const b = document.getElementById('ccCam');
+  if (isVideoOff) {
+    // Just disable — stop the track
+    await room.localParticipant.setCameraEnabled(false);
+  } else {
+    // Re-enable with front camera explicitly
+    const isMob = /Mobi|Android|iPhone|iPad/.test(navigator.userAgent);
+    if (isMob) {
+      try {
+        const _s = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'user' } }, audio: false
+        });
+        const newTrack = _s.getVideoTracks()[0];
+        const camPub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
+        if (camPub?.track) {
+          await camPub.track.replaceTrack(newTrack, true);
+          const vid = document.querySelector('#vw-local video');
+          if (vid) { vid.srcObject = new MediaStream([newTrack]); vid.play().catch(()=>{}); }
+        } else {
+          await room.localParticipant.publishTrack(newTrack);
+        }
+      } catch { await room.localParticipant.setCameraEnabled(true); }
+    } else {
+      await room.localParticipant.setCameraEnabled(true);
+    }
+  }
   b.classList.toggle('off', isVideoOff);
   b.querySelector('.ci').textContent = isVideoOff ? '🚫' : '📷';
   b.querySelector('.cl').textContent = isVideoOff ? 'Sin cam.' : 'Cámara';
