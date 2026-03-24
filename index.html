@@ -1128,10 +1128,19 @@ function handleDataMsg(msg, participant) {
     case 'doc-share':
       receiveDoc(msg.doc);
       break;
+    case 'doc-chunk':
+      receiveDocChunk(msg);
+      break;
     case 'show-doc':
       const _sd = sharedDocs.find(d => d.id === msg.docId);
-      if (_sd) showDoc(_sd.id);
-      else toast('📄 El host está mostrando un documento');
+      if (_sd) {
+        toast('📄 ' + (msg.senderName || 'Alguien') + ' comparte: ' + _sd.name);
+        showDoc(_sd.id);
+      } else {
+        // Doc still arriving in chunks — show when ready
+        window._pendingShowDoc = msg.docId;
+        toast('📄 ' + (msg.senderName || 'Alguien') + ' comparte un archivo — recibiendo…');
+      }
       break;
     case 'close-doc':
       closeDocViewer(false);
@@ -1554,9 +1563,23 @@ function uploadFiles(input) {
     if (file.size > 5*1024*1024) { toast(file.name + ': supera 5MB'); return; }
     const r = new FileReader();
     r.onload = async e => {
-      const doc = {id:Date.now()+'-'+Math.random().toString(36).slice(2),name:file.name,size:file.size,type:file.type,data:e.target.result,senderName:myName};
-      sharedDocs.push(doc); addDocItem(doc);
-      await sendData({type:'doc-share',doc});
+      const docId = Date.now()+'-'+Math.random().toString(36).slice(2);
+      const data = e.target.result;
+      const doc = {id:docId, name:file.name, size:file.size, type:file.type, data, senderName:myName};
+      sharedDocs.push(doc);
+      addDocItem(doc);
+      // Send in chunks of 10KB to stay under LiveKit 15KB packet limit
+      const CHUNK = 10000;
+      const total = Math.ceil(data.length / CHUNK);
+      for (let i = 0; i < total; i++) {
+        await sendData({
+          type: 'doc-chunk',
+          docId, name: file.name, size: file.size, mimeType: file.type,
+          senderName: myName, chunk: data.slice(i*CHUNK, (i+1)*CHUNK),
+          index: i, total
+        });
+        await new Promise(r => setTimeout(r, 30)); // small delay between chunks
+      }
       toast(file.name + ' compartido ✓');
     };
     r.readAsDataURL(file);
@@ -1568,6 +1591,34 @@ function receiveDoc(doc) {
   if (activePanel !== 'docs') { unreadDocs++; const b=document.getElementById('docsBadge'); b.style.display='inline'; b.textContent=unreadDocs; }
   addSys(doc.senderName + ' compartió "' + doc.name + '"');
   toast('📎 ' + doc.senderName + ' compartió un archivo');
+}
+
+// Buffer for incoming chunks
+const _docChunks = {};
+function receiveDocChunk(msg) {
+  if (!_docChunks[msg.docId]) {
+    _docChunks[msg.docId] = { chunks: [], name: msg.name, size: msg.size, type: msg.mimeType, senderName: msg.senderName, total: msg.total };
+  }
+  const buf = _docChunks[msg.docId];
+  buf.chunks[msg.index] = msg.chunk;
+  // Check if all chunks received
+  const received = buf.chunks.filter(Boolean).length;
+  if (received === buf.total) {
+    const data = buf.chunks.join('');
+    const doc = { id: msg.docId, name: buf.name, size: buf.size, type: buf.type, data, senderName: buf.senderName };
+    delete _docChunks[msg.docId];
+    if (!sharedDocs.find(d => d.id === doc.id)) {
+      sharedDocs.push(doc); addDocItem(doc);
+      if (activePanel !== 'docs') { unreadDocs++; const b=document.getElementById('docsBadge'); b.style.display='inline'; b.textContent=unreadDocs; }
+      addSys(doc.senderName + ' compartió "' + doc.name + '"');
+      toast('📎 ' + doc.senderName + ' compartió: ' + doc.name);
+    }
+    // If a show-doc was pending for this doc, show it now
+    if (window._pendingShowDoc === msg.docId) {
+      showDoc(msg.docId);
+      window._pendingShowDoc = null;
+    }
+  }
 }
 function addDocItem(doc) {
   document.getElementById('docsEmpty').style.display = 'none';
@@ -1889,8 +1940,11 @@ async function closeDocViewer(broadcast = false) {
 
 async function shareDocScreen() {
   if (!_currentDocId) return;
-  // Send show-doc message to all participants
-  await sendData({ type: 'show-doc', docId: _currentDocId });
+  const doc = sharedDocs.find(d => d.id === _currentDocId);
+  if (!doc) return;
+  // Only send docId + name — doc data already shared via doc-share event
+  // LiveKit has ~15KB packet limit so we cannot include the file here
+  await sendData({ type: 'show-doc', docId: _currentDocId, senderName: myName, docName: doc.name });
   toast('Documento compartido en pantalla 📡');
 }
 
