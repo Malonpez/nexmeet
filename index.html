@@ -574,6 +574,7 @@ body.is-host .host-only { display: flex; }
       <button class="cc" onclick="toggleMore()"><div class="ci">⋯</div><div class="cl">Más</div></button>
       <div class="more-drop" id="moreDrop">
         <button class="mdi" onclick="openWB()"><span class="mi">🖊️</span> Pizarra</button>
+        <button class="mdi host-only" onclick="muteAll()"><span class="mi">🔇</span> Silenciar todos</button>
         <button class="mdi host-only" onclick="openPoll()"><span class="mi">📊</span> Encuesta</button>
         <button class="mdi host-only" onclick="openAgenda()"><span class="mi">📋</span> Agenda</button>
         <button class="mdi host-only" onclick="toggleRec()"><span class="mi" id="recIcon">⏺</span> <span id="recTxt">Grabar</span></button>
@@ -1121,7 +1122,15 @@ function handleDataMsg(msg, participant) {
       break;
     case 'mute-you':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
-      if (!isMuted) { isMuted = true; room.localParticipant.setMicrophoneEnabled(false).catch(()=>{}); const _mp=room.localParticipant.getTrack(LivekitClient.Track.Source.Microphone); if(_mp?.track?.mediaStreamTrack) _mp.track.mediaStreamTrack.enabled=false; updateMicBtn(); toast('El host te silenció'); }
+      if (!isMuted) {
+        isMuted = true;
+        room.localParticipant.setMicrophoneEnabled(false).catch(()=>{});
+        room.localParticipant.audioTrackPublications?.forEach(pub => {
+          if (pub.track?.mediaStreamTrack) pub.track.mediaStreamTrack.enabled = false;
+        });
+        updateMicBtn();
+        toast('El host te silenció');
+      }
       break;
     case 'kick':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
@@ -1268,7 +1277,8 @@ function mkWrap(id, lblId, label, muted, sid) {
   ov.innerHTML = `<div class="vavc">${init}</div><div class="vol-bar"><span style="height:4px"></span><span style="height:4px"></span><span style="height:4px"></span></div>`;
   let ctx = '';
   if (!muted && isHost && sid) {
-    ctx = `<div class="vctx"><button class="vctxbtn">⋯</button><div class="vctxdrop"><button onclick="muteRemote('${sid}')">🔇 Silenciar</button><button class="dk" onclick="kickRemote('${sid}')">🚫 Expulsar</button></div></div>`;
+    const _identity = label.replace(/ \(Tú\)/, '');
+    ctx = `<div class="vctx"><button class="vctxbtn">⋯</button><div class="vctxdrop"><button onclick="muteRemote('${_identity}')">🔇 Silenciar</button><button class="dk" onclick="kickRemote('${_identity}')">🚫 Expulsar</button></div></div>`;
   }
   w.append(v, l, ov);
   if (ctx) { const cd = document.createElement('div'); cd.innerHTML = ctx; w.appendChild(cd.firstChild); }
@@ -1341,7 +1351,11 @@ function endSSLayout() {
 // ══ CONTROLS ══
 async function toggleMic() {
   isMuted = !isMuted;
-  await room.localParticipant.setMicrophoneEnabled(!isMuted);
+  await room.localParticipant.setMicrophoneEnabled(!isMuted).catch(()=>{});
+  // Also toggle mediaStreamTrack directly — works for custom published audio tracks
+  room.localParticipant.audioTrackPublications?.forEach(pub => {
+    if (pub.track?.mediaStreamTrack) pub.track.mediaStreamTrack.enabled = !isMuted;
+  });
   updateMicBtn();
 }
 function updateMicBtn() {
@@ -1377,20 +1391,18 @@ async function toggleHand() {
   }
   toast(handRaised ? 'Mano levantada ✋' : 'Mano bajada');
 }
-async function muteRemote(sid) {
-  const p = [...room.remoteParticipants.values()].find(p => p.sid === sid)
-         || room.remoteParticipants.get(sid);
-  if (p) { await sendData({ type: 'mute-you', forIdentity: p.identity }); toast('Participante silenciado'); }
-  else { toast('No se encontró el participante'); }
+async function muteRemote(identity) {
+  const p = room.remoteParticipants.get(identity);
+  if (p) { await sendData({ type: 'mute-you', forIdentity: identity }); toast('Participante silenciado'); }
+  else { toast('Participante no encontrado'); }
 }
-async function kickRemote(sid) {
-  const p = [...room.remoteParticipants.values()].find(p => p.sid === sid)
-         || room.remoteParticipants.get(sid);
+async function kickRemote(identity) {
+  const p = room.remoteParticipants.get(identity);
   if (p) {
     const enc = new TextEncoder();
-    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'kick', forIdentity: p.identity })), 0);
-    setTimeout(() => removeParticipantVideo(sid), 500);
-  } else { toast('No se encontró el participante'); }
+    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'kick', forIdentity: identity })), 0);
+    setTimeout(() => removeParticipantVideo(p.sid), 500);
+  } else { toast('Participante no encontrado'); }
 }
 async function toggleLock() {
   isRoomLocked = !isRoomLocked;
@@ -1712,6 +1724,15 @@ function startTimer(){meetSecs=0;timerInt=setInterval(()=>{meetSecs++;const m=St
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function dl(content,filename,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mime}));a.download=filename;a.click();}
 function wDebug(msg){const el=document.getElementById('wDebug');if(el)el.innerHTML+=new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' '+msg+'<br>';console.log('[WR]',msg);}
+
+
+async function muteAll() {
+  room.remoteParticipants.forEach(async (p) => {
+    await sendData({ type: 'mute-you', forIdentity: p.identity });
+  });
+  toast('Todos los participantes silenciados');
+  document.getElementById('moreWrap').classList.remove('open');
+}
 
 </script>
 </body>
