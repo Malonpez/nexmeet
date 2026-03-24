@@ -1352,42 +1352,17 @@ function updateMicBtn() {
 }
 async function toggleCam() {
   isVideoOff = !isVideoOff;
+  await room.localParticipant.setCameraEnabled(!isVideoOff);
   const b = document.getElementById('ccCam');
-  const vid = document.querySelector('#vw-local video');
-  const camPub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
-
-  if (isVideoOff) {
-    // Stop track completely — works for both native and custom published tracks
-    if (camPub?.track?.mediaStreamTrack) {
-      camPub.track.mediaStreamTrack.enabled = false;
-    }
-    await room.localParticipant.setCameraEnabled(false).catch(() => {});
-    if (vid) vid.srcObject = null;
-  } else {
-    // Re-enable: get front camera stream, replace track in LiveKit + update local preview
-    try {
-      const isMob = /Mobi|Android|iPhone|iPad/.test(navigator.userAgent);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: isMob ? 'user' : 'environment' } },
-        audio: false
-      });
-      const newTrack = stream.getVideoTracks()[0];
-      window._localStream = new MediaStream([newTrack]);
-      if (camPub?.track) {
-        await camPub.track.replaceTrack(newTrack, true);
-      } else {
-        await room.localParticipant.publishTrack(newTrack);
-      }
-      if (vid) { vid.srcObject = window._localStream; vid.play().catch(() => {}); }
-    } catch {
-      await room.localParticipant.setCameraEnabled(true).catch(() => {});
-    }
-  }
-
   b.classList.toggle('off', isVideoOff);
   b.querySelector('.ci').textContent = isVideoOff ? '🚫' : '📷';
   b.querySelector('.cl').textContent = isVideoOff ? 'Sin cam.' : 'Cámara';
   document.getElementById('voff-vw-local')?.classList.toggle('show', isVideoOff);
+  // For guests on mobile: update local preview after re-enable
+  if (!isVideoOff && window._localStream) {
+    const vid = document.querySelector('#vw-local video');
+    if (vid) { vid.srcObject = window._localStream; vid.play().catch(()=>{}); }
+  }
 }
 async function toggleHand() {
   handRaised = !handRaised;
