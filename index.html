@@ -1121,7 +1121,7 @@ function handleDataMsg(msg, participant) {
       break;
     case 'mute-you':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
-      if (!isMuted) { isMuted = true; room.localParticipant.setMicrophoneEnabled(false); updateMicBtn(); toast('El host te silenció'); }
+      if (!isMuted) { isMuted = true; room.localParticipant.setMicrophoneEnabled(false).catch(()=>{}); const _mp=room.localParticipant.getTrack(LivekitClient.Track.Source.Microphone); if(_mp?.track?.mediaStreamTrack) _mp.track.mediaStreamTrack.enabled=false; updateMicBtn(); toast('El host te silenció'); }
       break;
     case 'kick':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
@@ -1378,16 +1378,19 @@ async function toggleHand() {
   toast(handRaised ? 'Mano levantada ✋' : 'Mano bajada');
 }
 async function muteRemote(sid) {
-  const p = [...room.remoteParticipants.values()].find(p => p.sid === sid);
+  const p = [...room.remoteParticipants.values()].find(p => p.sid === sid)
+         || room.remoteParticipants.get(sid);
   if (p) { await sendData({ type: 'mute-you', forIdentity: p.identity }); toast('Participante silenciado'); }
+  else { toast('No se encontró el participante'); }
 }
 async function kickRemote(sid) {
-  const p = [...room.remoteParticipants.values()].find(p => p.sid === sid);
+  const p = [...room.remoteParticipants.values()].find(p => p.sid === sid)
+         || room.remoteParticipants.get(sid);
   if (p) {
     const enc = new TextEncoder();
     await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'kick', forIdentity: p.identity })), 0);
     setTimeout(() => removeParticipantVideo(sid), 500);
-  }
+  } else { toast('No se encontró el participante'); }
 }
 async function toggleLock() {
   isRoomLocked = !isRoomLocked;
