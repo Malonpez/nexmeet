@@ -446,6 +446,15 @@ body.is-host .host-only { display: flex; }
 .intro-logo{font-family:'Syne',sans-serif;font-size:clamp(2.8rem,10vw,5rem);font-weight:800;color:#fff;letter-spacing:-2px;}
 .intro-logo span{color:#00e5c3;}
 .intro-tag{font-size:.8rem;color:#6b7590;letter-spacing:.2em;text-transform:uppercase;margin-top:.8rem;}
+
+/* Doc viewer overlay */
+#docViewer{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.92);flex-direction:column;align-items:center;justify-content:center;}
+#docViewer.show{display:flex;}
+#docViewerContent{max-width:92vw;max-height:85vh;border-radius:10px;overflow:auto;background:#fff;}
+#docViewerContent img{max-width:88vw;max-height:82vh;object-fit:contain;display:block;}
+#docViewerContent iframe{width:88vw;height:82vh;border:none;}
+#docViewerBar{display:flex;align-items:center;gap:1rem;padding:.6rem 1rem;background:var(--surface);border-radius:10px;margin-bottom:.5rem;width:88vw;box-sizing:border-box;}
+#docViewerName{flex:1;font-size:.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 </style>
 </head>
 <body>
@@ -565,6 +574,7 @@ body.is-host .host-only { display: flex; }
     <button class="cc" id="ccCam" onclick="toggleCam()"><div class="ci">📷</div><div class="cl">Cámara</div></button>
     <button class="cc" id="ccScreen" onclick="toggleScreen()"><div class="ci">🖥️</div><div class="cl">Pantalla</div></button>
     <button class="cc" id="ccHand" onclick="toggleHand()"><div class="ci">✋</div><div class="cl">Mano</div></button>
+    <button class="cc host-only" id="ccMuteAll" onclick="muteAll()"><div class="ci">🔇</div><div class="cl">Silenciar</div></button>
     <div class="cdiv"></div>
     <button class="cc" id="ccChat" onclick="togglePanel('chat')"><div class="ci">💬</div><div class="cl">Chat <span class="badge" id="chatBadge" style="display:none">0</span></div></button>
     <button class="cc" id="ccDocs" onclick="togglePanel('docs')"><div class="ci">📁</div><div class="cl">Archivos <span class="badge" id="docsBadge" style="display:none">0</span></div></button>
@@ -574,7 +584,6 @@ body.is-host .host-only { display: flex; }
       <button class="cc" onclick="toggleMore()"><div class="ci">⋯</div><div class="cl">Más</div></button>
       <div class="more-drop" id="moreDrop">
         <button class="mdi" onclick="openWB()"><span class="mi">🖊️</span> Pizarra</button>
-        <button class="mdi host-only" onclick="muteAll()"><span class="mi">🔇</span> Silenciar todos</button>
         <button class="mdi host-only" onclick="openPoll()"><span class="mi">📊</span> Encuesta</button>
         <button class="mdi host-only" onclick="openAgenda()"><span class="mi">📋</span> Agenda</button>
         <button class="mdi host-only" onclick="toggleRec()"><span class="mi" id="recIcon">⏺</span> <span id="recTxt">Grabar</span></button>
@@ -680,6 +689,17 @@ body.is-host .host-only { display: flex; }
   </div>
 </div>
 
+
+
+<!-- DOC VIEWER -->
+<div id="docViewer">
+  <div id="docViewerBar">
+    <span id="docViewerName">—</span>
+    <button class="btn btn-s" style="width:auto;font-size:.78rem" onclick="shareDocScreen()">📡 Compartir en sala</button>
+    <button class="btn btn-s" style="width:auto;font-size:.78rem" onclick="closeDocViewer()">✕ Cerrar</button>
+  </div>
+  <div id="docViewerContent"></div>
+</div>
 
 <div id="recNotif">⏺ Grabando…</div>
 <div class="toast" id="toast"></div>
@@ -1108,6 +1128,12 @@ function handleDataMsg(msg, participant) {
     case 'doc-share':
       receiveDoc(msg.doc);
       break;
+    case 'show-doc':
+      // Host is sharing a doc on screen — show it to all guests
+      const _sd = sharedDocs.find(d => d.id === msg.docId);
+      if (_sd) showDoc(_sd.id);
+      else toast('📄 El host está mostrando un documento');
+      break;
     case 'wb-draw':
       receiveWbStroke(msg);
       break;
@@ -1122,15 +1148,21 @@ function handleDataMsg(msg, participant) {
       break;
     case 'mute-you':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
-      if (!isMuted) {
-        isMuted = true;
-        room.localParticipant.setMicrophoneEnabled(false).catch(()=>{});
-        room.localParticipant.audioTrackPublications?.forEach(pub => {
-          if (pub.track?.mediaStreamTrack) pub.track.mediaStreamTrack.enabled = false;
-        });
-        updateMicBtn();
-        toast('El host te silenció');
-      }
+      isMuted = true;
+      room.localParticipant.setMicrophoneEnabled(false).catch(()=>{});
+      const _micT = room.localParticipant.getTrack(LivekitClient.Track.Source.Microphone)?.track?.mediaStreamTrack;
+      if (_micT) _micT.enabled = false;
+      updateMicBtn();
+      toast('El host te silenció');
+      break;
+    case 'unmute-you':
+      if (msg.forIdentity && msg.forIdentity !== myName) break;
+      isMuted = false;
+      room.localParticipant.setMicrophoneEnabled(true).catch(()=>{});
+      const _micU = room.localParticipant.getTrack(LivekitClient.Track.Source.Microphone)?.track?.mediaStreamTrack;
+      if (_micU) _micU.enabled = true;
+      updateMicBtn();
+      toast('El host activó tu micrófono');
       break;
     case 'kick':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
@@ -1278,7 +1310,7 @@ function mkWrap(id, lblId, label, muted, sid) {
   let ctx = '';
   if (!muted && isHost && sid) {
     const _identity = label.replace(/ \(Tú\)/, '');
-    ctx = `<div class="vctx"><button class="vctxbtn">⋯</button><div class="vctxdrop"><button onclick="muteRemote('${_identity}')">🔇 Silenciar</button><button class="dk" onclick="kickRemote('${_identity}')">🚫 Expulsar</button></div></div>`;
+    ctx = `<div class="vctx"><button class="vctxbtn">⋯</button><div class="vctxdrop"><button data-muted="${_identity}" data-mute-state="0" onclick="muteRemote('${_identity}')">🔇 Silenciar</button><button class="dk" onclick="kickRemote('${_identity}')">🚫 Expulsar</button></div></div>`;
   }
   w.append(v, l, ov);
   if (ctx) { const cd = document.createElement('div'); cd.innerHTML = ctx; w.appendChild(cd.firstChild); }
@@ -1352,10 +1384,8 @@ function endSSLayout() {
 async function toggleMic() {
   isMuted = !isMuted;
   await room.localParticipant.setMicrophoneEnabled(!isMuted).catch(()=>{});
-  // Also toggle mediaStreamTrack directly — works for custom published audio tracks
-  room.localParticipant.audioTrackPublications?.forEach(pub => {
-    if (pub.track?.mediaStreamTrack) pub.track.mediaStreamTrack.enabled = !isMuted;
-  });
+  const micTrack = room.localParticipant.getTrack(LivekitClient.Track.Source.Microphone)?.track?.mediaStreamTrack;
+  if (micTrack) micTrack.enabled = !isMuted;
   updateMicBtn();
 }
 function updateMicBtn() {
@@ -1393,8 +1423,18 @@ async function toggleHand() {
 }
 async function muteRemote(identity) {
   const p = room.remoteParticipants.get(identity);
-  if (p) { await sendData({ type: 'mute-you', forIdentity: identity }); toast('Participante silenciado'); }
-  else { toast('Participante no encontrado'); }
+  if (!p) { toast('Participante no encontrado'); return; }
+  const btn = document.querySelector(`[data-muted='${identity}']`);
+  const isMutedNow = btn?.dataset.muteState === '1';
+  if (isMutedNow) {
+    await sendData({ type: 'unmute-you', forIdentity: identity });
+    if (btn) { btn.dataset.muteState = '0'; btn.textContent = '🔇 Silenciar'; }
+    toast(identity + ' activado');
+  } else {
+    await sendData({ type: 'mute-you', forIdentity: identity });
+    if (btn) { btn.dataset.muteState = '1'; btn.textContent = '🔊 Activar mic'; }
+    toast(identity + ' silenciado');
+  }
 }
 async function kickRemote(identity) {
   const p = room.remoteParticipants.get(identity);
@@ -1531,7 +1571,7 @@ function addDocItem(doc) {
   document.getElementById('docsEmpty').style.display = 'none';
   const list = document.getElementById('docsList');
   const item = document.createElement('div'); item.className = 'ditem';
-  item.innerHTML = `<div class="dicon">${fIcon(doc.type)}</div><div class="dinfo"><div class="dname" title="${esc(doc.name)}">${esc(doc.name)}</div><div class="dmeta">${fSize(doc.size)} · ${esc(doc.senderName)}</div></div><button class="ddl" onclick="dlDoc('${doc.id}')">⬇</button>`;
+  item.innerHTML = `<div class="dicon">${fIcon(doc.type)}</div><div class="dinfo"><div class="dname" title="${esc(doc.name)}">${esc(doc.name)}</div><div class="dmeta">${fSize(doc.size)} · ${esc(doc.senderName)}</div></div><div style="display:flex;gap:.3rem"><button class="ddl" title="Mostrar en pantalla" onclick="showDoc('${doc.id}')">🖥️</button><button class="ddl" title="Descargar" onclick="dlDoc('${doc.id}')">⬇</button></div>`;
   list.appendChild(item);
 }
 function dlDoc(id) { const doc=sharedDocs.find(d=>d.id===id); if(!doc)return; const a=document.createElement('a');a.href=doc.data;a.download=doc.name;a.click(); }
@@ -1730,8 +1770,50 @@ async function muteAll() {
   room.remoteParticipants.forEach(async (p) => {
     await sendData({ type: 'mute-you', forIdentity: p.identity });
   });
-  toast('Todos los participantes silenciados');
-  document.getElementById('moreWrap').classList.remove('open');
+  // Update all mute buttons to show muted state
+  document.querySelectorAll('[data-muted]').forEach(btn => {
+    btn.dataset.muteState = '1';
+    btn.textContent = '🔊 Activar mic';
+  });
+  toast('Todos silenciados 🔇');
+}
+
+
+// ══ DOC VIEWER ══
+let _currentDocId = null;
+
+function showDoc(id) {
+  const doc = sharedDocs.find(d => d.id === id);
+  if (!doc) return;
+  _currentDocId = id;
+  const content = document.getElementById('docViewerContent');
+  document.getElementById('docViewerName').textContent = doc.name;
+  content.innerHTML = '';
+  if (doc.type.startsWith('image/')) {
+    const img = document.createElement('img');
+    img.src = doc.data;
+    content.appendChild(img);
+  } else if (doc.type === 'application/pdf') {
+    const iframe = document.createElement('iframe');
+    iframe.src = doc.data;
+    content.appendChild(iframe);
+  } else {
+    // For other files, show a message
+    content.innerHTML = `<div style="padding:2rem;text-align:center;color:#333"><p style="font-size:1rem">📄 ${esc(doc.name)}</p><p style="font-size:.85rem;color:#666">Este tipo de archivo no se puede previsualizar.<br>Usa el botón ⬇ para descargarlo.</p></div>`;
+  }
+  document.getElementById('docViewer').classList.add('show');
+}
+
+function closeDocViewer() {
+  document.getElementById('docViewer').classList.remove('show');
+  _currentDocId = null;
+}
+
+async function shareDocScreen() {
+  if (!_currentDocId) return;
+  // Send show-doc message to all participants
+  await sendData({ type: 'show-doc', docId: _currentDocId });
+  toast('Documento compartido en pantalla 📡');
 }
 
 </script>
