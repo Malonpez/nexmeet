@@ -1028,18 +1028,16 @@ function handleDataMsg(msg, participant) {
       // Now publish camera and mic (guest was muted while waiting)
       (async () => {
         try {
-          const _isMob = /Mobi|Android|iPhone|iPad/.test(navigator.userAgent);
-          if (_isMob) {
-            const _s = await navigator.mediaDevices.getUserMedia({
-              video: { facingMode: { ideal: 'user' } },
-              audio: { echoCancellation: true, noiseSuppression: true }
-            });
-            await room.localParticipant.publishTrack(_s.getVideoTracks()[0]);
-            await room.localParticipant.publishTrack(_s.getAudioTracks()[0]);
-          } else {
-            await room.localParticipant.enableCameraAndMicrophone();
-          }
-        } catch(e) { console.warn('publish on admit failed:', e); }
+          const _s = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'user' } },
+            audio: { echoCancellation: true, noiseSuppression: true }
+          });
+          await room.localParticipant.publishTrack(_s.getVideoTracks()[0]);
+          await room.localParticipant.publishTrack(_s.getAudioTracks()[0]);
+        } catch(e) {
+          console.warn('publish on admit failed:', e);
+          try { await room.localParticipant.enableCameraAndMicrophone(); } catch {}
+        }
       })();
       hide('waitingRoom');
       enterMeeting();
@@ -1226,6 +1224,9 @@ function attachLocalVideo() {
   if (camPub?.track) {
     const vid = wrap.querySelector('video');
     camPub.track.attach(vid);
+    // Fallback for mobile where attach() alone may not render
+    const mst = camPub.track.mediaStreamTrack;
+    if (mst) { vid.srcObject = new MediaStream([mst]); vid.play().catch(()=>{}); }
     document.getElementById('voff-vw-local')?.classList.remove('show');
   }
 }
