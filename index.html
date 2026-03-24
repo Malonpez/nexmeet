@@ -696,7 +696,7 @@ body.is-host .host-only { display: flex; }
   <div id="docViewerBar">
     <span id="docViewerName">—</span>
     <button class="btn btn-s" style="width:auto;font-size:.78rem" onclick="shareDocScreen()">📡 Compartir en sala</button>
-    <button class="btn btn-s" style="width:auto;font-size:.78rem" onclick="closeDocViewer()">✕ Cerrar</button>
+    <button class="btn btn-s" style="width:auto;font-size:.78rem" onclick="closeDocViewer(true)">✕ Cerrar para todos</button>
   </div>
   <div id="docViewerContent"></div>
 </div>
@@ -1129,10 +1129,12 @@ function handleDataMsg(msg, participant) {
       receiveDoc(msg.doc);
       break;
     case 'show-doc':
-      // Host is sharing a doc on screen — show it to all guests
       const _sd = sharedDocs.find(d => d.id === msg.docId);
       if (_sd) showDoc(_sd.id);
       else toast('📄 El host está mostrando un documento');
+      break;
+    case 'close-doc':
+      closeDocViewer(false);
       break;
     case 'wb-draw':
       receiveWbStroke(msg);
@@ -1782,30 +1784,106 @@ async function muteAll() {
 // ══ DOC VIEWER ══
 let _currentDocId = null;
 
-function showDoc(id) {
+async function showDoc(id) {
   const doc = sharedDocs.find(d => d.id === id);
   if (!doc) return;
   _currentDocId = id;
   const content = document.getElementById('docViewerContent');
   document.getElementById('docViewerName').textContent = doc.name;
-  content.innerHTML = '';
-  if (doc.type.startsWith('image/')) {
-    const img = document.createElement('img');
-    img.src = doc.data;
-    content.appendChild(img);
-  } else if (doc.type === 'application/pdf') {
-    const iframe = document.createElement('iframe');
-    iframe.src = doc.data;
-    content.appendChild(iframe);
-  } else {
-    // For other files, show a message
-    content.innerHTML = `<div style="padding:2rem;text-align:center;color:#333"><p style="font-size:1rem">📄 ${esc(doc.name)}</p><p style="font-size:.85rem;color:#666">Este tipo de archivo no se puede previsualizar.<br>Usa el botón ⬇ para descargarlo.</p></div>`;
-  }
+  content.innerHTML = '<div style="padding:2rem;text-align:center;color:#555">Cargando…</div>';
   document.getElementById('docViewer').classList.add('show');
+
+  const ext = doc.name.split('.').pop().toLowerCase();
+  const type = doc.type || '';
+
+  try {
+    if (type.startsWith('image/')) {
+      content.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = doc.data;
+      content.appendChild(img);
+
+    } else if (type === 'application/pdf' || ext === 'pdf') {
+      // Use PDF.js for reliable PDF rendering
+      await _loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+      const base64 = doc.data.split(',')[1];
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+      content.innerHTML = '';
+      content.style.overflowY = 'auto';
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page = await pdf.getPage(p);
+        const vp = page.getViewport({ scale: 1.4 });
+        const canvas = document.createElement('canvas');
+        canvas.width = vp.width; canvas.height = vp.height;
+        canvas.style.cssText = 'display:block;margin:0 auto 4px;max-width:100%';
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+        content.appendChild(canvas);
+      }
+
+    } else if (ext === 'docx' || type.includes('word') || type.includes('document')) {
+      await _loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js');
+      const base64 = doc.data.split(',')[1];
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const result = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer });
+      content.innerHTML = `<div style="padding:1.5rem 2rem;font-family:Georgia,serif;font-size:.95rem;line-height:1.7;color:#222;max-width:800px;margin:0 auto">${result.value}</div>`;
+
+    } else if (ext === 'xlsx' || ext === 'xls' || type.includes('sheet') || type.includes('excel')) {
+      await _loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+      const base64 = doc.data.split(',')[1];
+      const workbook = XLSX.read(base64, { type: 'base64' });
+      let html = '<div style="padding:1rem;overflow-x:auto">';
+      workbook.SheetNames.forEach(name => {
+        html += `<h3 style="font-size:.9rem;margin:.5rem 0;color:#333">${esc(name)}</h3>`;
+        html += '<table style="border-collapse:collapse;font-size:.8rem;margin-bottom:1rem">';
+        const ws = workbook.Sheets[name];
+        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        data.forEach((row, i) => {
+          html += '<tr>';
+          row.forEach(cell => {
+            const tag = i === 0 ? 'th' : 'td';
+            const style = i === 0 ? 'background:#f0f0f0;font-weight:600;' : '';
+            html += `<${tag} style="border:1px solid #ccc;padding:4px 8px;${style}">${esc(String(cell ?? ''))}</${tag}>`;
+          });
+          html += '</tr>';
+        });
+        html += '</table>';
+      });
+      html += '</div>';
+      content.innerHTML = html;
+
+    } else {
+      content.innerHTML = `<div style="padding:2rem;text-align:center;color:#333">
+        <p style="font-size:2rem">📄</p>
+        <p style="font-weight:600">${esc(doc.name)}</p>
+        <p style="color:#666;font-size:.85rem">Este formato no tiene previsualización.<br>Descárgalo para abrirlo.</p>
+        <button onclick="dlDoc('${doc.id}')" style="margin-top:1rem;padding:.5rem 1.2rem;background:#0f6;border:none;border-radius:6px;cursor:pointer;font-weight:600">⬇ Descargar</button>
+      </div>`;
+    }
+  } catch(e) {
+    content.innerHTML = `<div style="padding:2rem;text-align:center;color:#c00">Error al cargar: ${esc(e.message)}</div>`;
+  }
 }
 
-function closeDocViewer() {
+function _loadScript(src) {
+  return new Promise((res, rej) => {
+    if (document.querySelector('script[src="' + src + '"]')) { res(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+async function closeDocViewer(broadcast = false) {
   document.getElementById('docViewer').classList.remove('show');
+  if (broadcast && _currentDocId) {
+    await sendData({ type: 'close-doc' });
+  }
   _currentDocId = null;
 }
 
