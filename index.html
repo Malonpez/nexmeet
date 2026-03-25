@@ -1889,12 +1889,15 @@ async function showDoc(id) {
       const base64 = doc.data.split(',')[1];
       const workbook = XLSX.read(base64, { type: 'base64' });
       let html = '<div style="padding:1rem;overflow-x:auto">';
-      workbook.SheetNames.forEach(name => {
-        html += `<h3 style="font-size:.9rem;margin:.5rem 0;color:#333">${esc(name)}</h3>`;
+      workbook.SheetNames.forEach(shName => {
+        html += `<h3 style="font-size:.9rem;margin:.5rem 0;color:#333">${esc(shName)}</h3>`;
+        const ws = workbook.Sheets[shName];
+        if (!ws) return;
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+        if (!rows || rows.length === 0) { html += '<p style="color:#999;font-size:.8rem">Hoja vacía</p>'; return; }
         html += '<table style="border-collapse:collapse;font-size:.8rem;margin-bottom:1rem">';
-        const ws = workbook.Sheets[name];
-        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-        data.forEach((row, i) => {
+        rows.forEach((row, i) => {
+          if (!Array.isArray(row)) return;
           html += '<tr>';
           row.forEach(cell => {
             const tag = i === 0 ? 'th' : 'td';
