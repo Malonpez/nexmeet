@@ -446,15 +446,6 @@ body.is-host .host-only { display: flex; }
 .intro-logo{font-family:'Syne',sans-serif;font-size:clamp(2.8rem,10vw,5rem);font-weight:800;color:#fff;letter-spacing:-2px;}
 .intro-logo span{color:#00e5c3;}
 .intro-tag{font-size:.8rem;color:#6b7590;letter-spacing:.2em;text-transform:uppercase;margin-top:.8rem;}
-
-/* Doc viewer overlay */
-#docViewer{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.92);flex-direction:column;align-items:center;justify-content:center;}
-#docViewer.show{display:flex;}
-#docViewerContent{max-width:92vw;max-height:85vh;border-radius:10px;overflow:auto;background:#fff;}
-#docViewerContent img{max-width:88vw;max-height:82vh;object-fit:contain;display:block;}
-#docViewerContent iframe{width:88vw;height:82vh;border:none;}
-#docViewerBar{display:flex;align-items:center;gap:1rem;padding:.6rem 1rem;background:var(--surface);border-radius:10px;margin-bottom:.5rem;width:88vw;box-sizing:border-box;}
-#docViewerName{flex:1;font-size:.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 </style>
 </head>
 <body>
@@ -574,7 +565,6 @@ body.is-host .host-only { display: flex; }
     <button class="cc" id="ccCam" onclick="toggleCam()"><div class="ci">📷</div><div class="cl">Cámara</div></button>
     <button class="cc" id="ccScreen" onclick="toggleScreen()"><div class="ci">🖥️</div><div class="cl">Pantalla</div></button>
     <button class="cc" id="ccHand" onclick="toggleHand()"><div class="ci">✋</div><div class="cl">Mano</div></button>
-    <button class="cc host-only" id="ccMuteAll" onclick="muteAll()"><div class="ci">🔇</div><div class="cl">Silenciar</div></button>
     <div class="cdiv"></div>
     <button class="cc" id="ccChat" onclick="togglePanel('chat')"><div class="ci">💬</div><div class="cl">Chat <span class="badge" id="chatBadge" style="display:none">0</span></div></button>
     <button class="cc" id="ccDocs" onclick="togglePanel('docs')"><div class="ci">📁</div><div class="cl">Archivos <span class="badge" id="docsBadge" style="display:none">0</span></div></button>
@@ -690,17 +680,6 @@ body.is-host .host-only { display: flex; }
 </div>
 
 
-
-<!-- DOC VIEWER -->
-<div id="docViewer">
-  <div id="docViewerBar">
-    <span id="docViewerName">—</span>
-    <button class="btn btn-s" style="width:auto;font-size:.78rem" onclick="shareDocScreen()">📡 Compartir en sala</button>
-    <button class="btn btn-s" style="width:auto;font-size:.78rem" onclick="closeDocViewer(true)">✕ Cerrar para todos</button>
-  </div>
-  <div id="docViewerContent"></div>
-</div>
-
 <div id="recNotif">⏺ Grabando…</div>
 <div class="toast" id="toast"></div>
 <script>
@@ -740,10 +719,7 @@ function parseHash() {
 }
 function buildLink(rid, ms) {
   const keyB64 = window._e2eeKeyB64 || '';
-  const base = location.protocol === 'file:' 
-    ? 'https://malonpez.github.io/nexmeet/' 
-    : location.href.split('#')[0];
-  return base + '#' + rid + '|' + (Date.now() + ms) + (keyB64 ? '|' + keyB64 : '');
+  return location.href.split('#')[0] + '#' + rid + '|' + (Date.now() + ms) + (keyB64 ? '|' + keyB64 : '');
 }
 
 // ── E2EE Key management ──────────────────
@@ -898,27 +874,27 @@ async function joinLiveKit(rid, name, host) {
 
     await room.connect(LK_URL, token);
 
+    // Publish tracks
+    const _isMobile = /Mobi|Android|iPhone|iPad/.test(navigator.userAgent);
+    if (_isMobile) {
+      try {
+        const _s = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'user' } },
+          audio: { echoCancellation: true, noiseSuppression: true }
+        });
+        window._currentFacing = 'user';
+        await room.localParticipant.publishTrack(_s.getVideoTracks()[0]);
+        await room.localParticipant.publishTrack(_s.getAudioTracks()[0]);
+      } catch { await room.localParticipant.enableCameraAndMicrophone(); }
+    } else {
+      await room.localParticipant.enableCameraAndMicrophone();
+    }
+
     if (host) {
-      // Host publishes tracks immediately
-      const _isMobile = /Mobi|Android|iPhone|iPad/.test(navigator.userAgent);
-      if (_isMobile) {
-        try {
-          const _s = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: 'user' } },
-            audio: { echoCancellation: true, noiseSuppression: true }
-          });
-          window._currentFacing = 'user';
-          await room.localParticipant.publishTrack(_s.getVideoTracks()[0]);
-          await room.localParticipant.publishTrack(_s.getAudioTracks()[0]);
-        } catch { await room.localParticipant.enableCameraAndMicrophone(); }
-      } else {
-        await room.localParticipant.enableCameraAndMicrophone();
-      }
       enterMeeting();
       setWov(true);
       setTimeout(() => { applyE2EEToRoom(); updateE2EEBadge(); }, 1000);
     } else {
-      // Guest does NOT publish camera/mic until admitted — only data channel
       // Send knock — retry every 3s until admitted (host DataReceived may not be ready instantly)
       const enc = new TextEncoder();
       const knockMsg = enc.encode(JSON.stringify({ type: 'knock', name }));
@@ -1046,21 +1022,6 @@ function handleDataMsg(msg, participant) {
       if (msg.forIdentity && msg.forIdentity !== myName) break;
       if (isHost) break;
       if (window._knockInterval) clearInterval(window._knockInterval);
-      // Now publish camera and mic (guest was muted while waiting)
-      (async () => {
-        try {
-          const _s = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: 'user' } },
-            audio: { echoCancellation: true, noiseSuppression: true }
-          });
-          window._localStream = _s; // store for local preview
-          await room.localParticipant.publishTrack(_s.getVideoTracks()[0]);
-          await room.localParticipant.publishTrack(_s.getAudioTracks()[0]);
-        } catch(e) {
-          console.warn('publish on admit failed:', e);
-          try { await room.localParticipant.enableCameraAndMicrophone(); } catch {}
-        }
-      })();
       hide('waitingRoom');
       enterMeeting();
       setTimeout(() => { applyE2EEToRoom(); updateE2EEBadge(); }, 1000);
@@ -1128,23 +1089,6 @@ function handleDataMsg(msg, participant) {
     case 'doc-share':
       receiveDoc(msg.doc);
       break;
-    case 'doc-chunk':
-      receiveDocChunk(msg);
-      break;
-    case 'show-doc':
-      const _sd = sharedDocs.find(d => d.id === msg.docId);
-      if (_sd) {
-        toast('📄 ' + (msg.senderName || 'Alguien') + ' comparte: ' + _sd.name);
-        showDoc(_sd.id);
-      } else {
-        // Doc still arriving in chunks — show when ready
-        window._pendingShowDoc = msg.docId;
-        toast('📄 ' + (msg.senderName || 'Alguien') + ' comparte un archivo — recibiendo…');
-      }
-      break;
-    case 'close-doc':
-      closeDocViewer(false);
-      break;
     case 'wb-draw':
       receiveWbStroke(msg);
       break;
@@ -1159,21 +1103,7 @@ function handleDataMsg(msg, participant) {
       break;
     case 'mute-you':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
-      isMuted = true;
-      room.localParticipant.setMicrophoneEnabled(false).catch(()=>{});
-      const _micT = room.localParticipant.getTrack(LivekitClient.Track.Source.Microphone)?.track?.mediaStreamTrack;
-      if (_micT) _micT.enabled = false;
-      updateMicBtn();
-      toast('El host te silenció');
-      break;
-    case 'unmute-you':
-      if (msg.forIdentity && msg.forIdentity !== myName) break;
-      isMuted = false;
-      room.localParticipant.setMicrophoneEnabled(true).catch(()=>{});
-      const _micU = room.localParticipant.getTrack(LivekitClient.Track.Source.Microphone)?.track?.mediaStreamTrack;
-      if (_micU) _micU.enabled = true;
-      updateMicBtn();
-      toast('El host activó tu micrófono');
+      if (!isMuted) { isMuted = true; room.localParticipant.setMicrophoneEnabled(false); updateMicBtn(); toast('El host te silenció'); }
       break;
     case 'kick':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
@@ -1274,20 +1204,41 @@ function attachLocalVideo() {
     updateGrid();
   }
   const vid = wrap.querySelector('video');
-  // Use stored stream directly if available (guest admitted path)
-  if (window._localStream) {
-    vid.srcObject = window._localStream;
-    vid.play().catch(()=>{});
+
+  // Try LiveKit track first
+  const camPub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
+  if (camPub?.track?.mediaStreamTrack) {
+    const mst = camPub.track.mediaStreamTrack;
+    vid.srcObject = new MediaStream([mst]);
+    vid.play().catch(() => {});
+    try { camPub.track.attach(vid); } catch(e) {}
     document.getElementById('voff-vw-local')?.classList.remove('show');
     return;
   }
-  const camPub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
-  if (camPub?.track) {
-    camPub.track.attach(vid);
-    const mst = camPub.track.mediaStreamTrack;
-    if (mst) { vid.srcObject = new MediaStream([mst]); vid.play().catch(()=>{}); }
-    document.getElementById('voff-vw-local')?.classList.remove('show');
-  }
+
+  // Track not ready yet — retry up to 10 times every 300ms
+  let attempts = 0;
+  const retry = setInterval(() => {
+    attempts++;
+    const pub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
+    if (pub?.track?.mediaStreamTrack) {
+      const mst = pub.track.mediaStreamTrack;
+      vid.srcObject = new MediaStream([mst]);
+      vid.play().catch(() => {});
+      try { pub.track.attach(vid); } catch(e) {}
+      document.getElementById('voff-vw-local')?.classList.remove('show');
+      clearInterval(retry);
+    } else if (attempts >= 10) {
+      clearInterval(retry);
+      // Last resort: getUserMedia directly
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(stream => {
+          vid.srcObject = stream;
+          vid.play().catch(() => {});
+          document.getElementById('voff-vw-local')?.classList.remove('show');
+        }).catch(() => {});
+    }
+  }, 300);
 }
 
 function attachVideo(sid, name, track) {
@@ -1320,8 +1271,7 @@ function mkWrap(id, lblId, label, muted, sid) {
   ov.innerHTML = `<div class="vavc">${init}</div><div class="vol-bar"><span style="height:4px"></span><span style="height:4px"></span><span style="height:4px"></span></div>`;
   let ctx = '';
   if (!muted && isHost && sid) {
-    const _identity = label.replace(/ \(Tú\)/, '');
-    ctx = `<div class="vctx"><button class="vctxbtn">⋯</button><div class="vctxdrop"><button data-muted="${_identity}" data-mute-state="0" onclick="muteRemote('${_identity}')">🔇 Silenciar</button><button class="dk" onclick="kickRemote('${_identity}')">🚫 Expulsar</button></div></div>`;
+    ctx = `<div class="vctx"><button class="vctxbtn">⋯</button><div class="vctxdrop"><button onclick="muteRemote('${sid}')">🔇 Silenciar</button><button class="dk" onclick="kickRemote('${sid}')">🚫 Expulsar</button></div></div>`;
   }
   w.append(v, l, ov);
   if (ctx) { const cd = document.createElement('div'); cd.innerHTML = ctx; w.appendChild(cd.firstChild); }
@@ -1394,9 +1344,7 @@ function endSSLayout() {
 // ══ CONTROLS ══
 async function toggleMic() {
   isMuted = !isMuted;
-  await room.localParticipant.setMicrophoneEnabled(!isMuted).catch(()=>{});
-  const micTrack = room.localParticipant.getTrack(LivekitClient.Track.Source.Microphone)?.track?.mediaStreamTrack;
-  if (micTrack) micTrack.enabled = !isMuted;
+  await room.localParticipant.setMicrophoneEnabled(!isMuted);
   updateMicBtn();
 }
 function updateMicBtn() {
@@ -1413,11 +1361,6 @@ async function toggleCam() {
   b.querySelector('.ci').textContent = isVideoOff ? '🚫' : '📷';
   b.querySelector('.cl').textContent = isVideoOff ? 'Sin cam.' : 'Cámara';
   document.getElementById('voff-vw-local')?.classList.toggle('show', isVideoOff);
-  // For guests on mobile: update local preview after re-enable
-  if (!isVideoOff && window._localStream) {
-    const vid = document.querySelector('#vw-local video');
-    if (vid) { vid.srcObject = window._localStream; vid.play().catch(()=>{}); }
-  }
 }
 async function toggleHand() {
   handRaised = !handRaised;
@@ -1432,28 +1375,17 @@ async function toggleHand() {
   }
   toast(handRaised ? 'Mano levantada ✋' : 'Mano bajada');
 }
-async function muteRemote(identity) {
-  const p = room.remoteParticipants.get(identity);
-  if (!p) { toast('Participante no encontrado'); return; }
-  const btn = document.querySelector(`[data-muted='${identity}']`);
-  const isMutedNow = btn?.dataset.muteState === '1';
-  if (isMutedNow) {
-    await sendData({ type: 'unmute-you', forIdentity: identity });
-    if (btn) { btn.dataset.muteState = '0'; btn.textContent = '🔇 Silenciar'; }
-    toast(identity + ' activado');
-  } else {
-    await sendData({ type: 'mute-you', forIdentity: identity });
-    if (btn) { btn.dataset.muteState = '1'; btn.textContent = '🔊 Activar mic'; }
-    toast(identity + ' silenciado');
-  }
+async function muteRemote(sid) {
+  const p = [...room.remoteParticipants.values()].find(p => p.sid === sid);
+  if (p) { await sendData({ type: 'mute-you' }); toast('Participante silenciado'); }
 }
-async function kickRemote(identity) {
-  const p = room.remoteParticipants.get(identity);
+async function kickRemote(sid) {
+  const p = [...room.remoteParticipants.values()].find(p => p.sid === sid);
   if (p) {
     const enc = new TextEncoder();
-    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'kick', forIdentity: identity })), 0);
-    setTimeout(() => removeParticipantVideo(p.sid), 500);
-  } else { toast('Participante no encontrado'); }
+    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'kick', forIdentity: p.identity })), 0);
+    setTimeout(() => removeParticipantVideo(sid), 500);
+  }
 }
 async function toggleLock() {
   isRoomLocked = !isRoomLocked;
@@ -1563,23 +1495,9 @@ function uploadFiles(input) {
     if (file.size > 5*1024*1024) { toast(file.name + ': supera 5MB'); return; }
     const r = new FileReader();
     r.onload = async e => {
-      const docId = Date.now()+'-'+Math.random().toString(36).slice(2);
-      const data = e.target.result;
-      const doc = {id:docId, name:file.name, size:file.size, type:file.type, data, senderName:myName};
-      sharedDocs.push(doc);
-      addDocItem(doc);
-      // Send in chunks of 10KB to stay under LiveKit 15KB packet limit
-      const CHUNK = 10000;
-      const total = Math.ceil(data.length / CHUNK);
-      for (let i = 0; i < total; i++) {
-        await sendData({
-          type: 'doc-chunk',
-          docId, name: file.name, size: file.size, mimeType: file.type,
-          senderName: myName, chunk: data.slice(i*CHUNK, (i+1)*CHUNK),
-          index: i, total
-        });
-        await new Promise(r => setTimeout(r, 30)); // small delay between chunks
-      }
+      const doc = {id:Date.now()+'-'+Math.random().toString(36).slice(2),name:file.name,size:file.size,type:file.type,data:e.target.result,senderName:myName};
+      sharedDocs.push(doc); addDocItem(doc);
+      await sendData({type:'doc-share',doc});
       toast(file.name + ' compartido ✓');
     };
     r.readAsDataURL(file);
@@ -1592,39 +1510,11 @@ function receiveDoc(doc) {
   addSys(doc.senderName + ' compartió "' + doc.name + '"');
   toast('📎 ' + doc.senderName + ' compartió un archivo');
 }
-
-// Buffer for incoming chunks
-const _docChunks = {};
-function receiveDocChunk(msg) {
-  if (!_docChunks[msg.docId]) {
-    _docChunks[msg.docId] = { chunks: [], name: msg.name, size: msg.size, type: msg.mimeType, senderName: msg.senderName, total: msg.total };
-  }
-  const buf = _docChunks[msg.docId];
-  buf.chunks[msg.index] = msg.chunk;
-  // Check if all chunks received
-  const received = buf.chunks.filter(Boolean).length;
-  if (received === buf.total) {
-    const data = buf.chunks.join('');
-    const doc = { id: msg.docId, name: buf.name, size: buf.size, type: buf.type, data, senderName: buf.senderName };
-    delete _docChunks[msg.docId];
-    if (!sharedDocs.find(d => d.id === doc.id)) {
-      sharedDocs.push(doc); addDocItem(doc);
-      if (activePanel !== 'docs') { unreadDocs++; const b=document.getElementById('docsBadge'); b.style.display='inline'; b.textContent=unreadDocs; }
-      addSys(doc.senderName + ' compartió "' + doc.name + '"');
-      toast('📎 ' + doc.senderName + ' compartió: ' + doc.name);
-    }
-    // If a show-doc was pending for this doc, show it now
-    if (window._pendingShowDoc === msg.docId) {
-      showDoc(msg.docId);
-      window._pendingShowDoc = null;
-    }
-  }
-}
 function addDocItem(doc) {
   document.getElementById('docsEmpty').style.display = 'none';
   const list = document.getElementById('docsList');
   const item = document.createElement('div'); item.className = 'ditem';
-  item.innerHTML = `<div class="dicon">${fIcon(doc.type)}</div><div class="dinfo"><div class="dname" title="${esc(doc.name)}">${esc(doc.name)}</div><div class="dmeta">${fSize(doc.size)} · ${esc(doc.senderName)}</div></div><div style="display:flex;gap:.3rem"><button class="ddl" title="Mostrar en pantalla" onclick="showDoc('${doc.id}')">🖥️</button><button class="ddl" title="Descargar" onclick="dlDoc('${doc.id}')">⬇</button></div>`;
+  item.innerHTML = `<div class="dicon">${fIcon(doc.type)}</div><div class="dinfo"><div class="dname" title="${esc(doc.name)}">${esc(doc.name)}</div><div class="dmeta">${fSize(doc.size)} · ${esc(doc.senderName)}</div></div><button class="ddl" onclick="dlDoc('${doc.id}')">⬇</button>`;
   list.appendChild(item);
 }
 function dlDoc(id) { const doc=sharedDocs.find(d=>d.id===id); if(!doc)return; const a=document.createElement('a');a.href=doc.data;a.download=doc.name;a.click(); }
@@ -1817,136 +1707,6 @@ function startTimer(){meetSecs=0;timerInt=setInterval(()=>{meetSecs++;const m=St
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function dl(content,filename,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mime}));a.download=filename;a.click();}
 function wDebug(msg){const el=document.getElementById('wDebug');if(el)el.innerHTML+=new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' '+msg+'<br>';console.log('[WR]',msg);}
-
-
-async function muteAll() {
-  room.remoteParticipants.forEach(async (p) => {
-    await sendData({ type: 'mute-you', forIdentity: p.identity });
-  });
-  // Update all mute buttons to show muted state
-  document.querySelectorAll('[data-muted]').forEach(btn => {
-    btn.dataset.muteState = '1';
-    btn.textContent = '🔊 Activar mic';
-  });
-  toast('Todos silenciados 🔇');
-}
-
-
-// ══ DOC VIEWER ══
-let _currentDocId = null;
-
-async function showDoc(id) {
-  const doc = sharedDocs.find(d => d.id === id);
-  if (!doc) return;
-  _currentDocId = id;
-  const content = document.getElementById('docViewerContent');
-  document.getElementById('docViewerName').textContent = doc.name;
-  content.innerHTML = '<div style="padding:2rem;text-align:center;color:#555">Cargando…</div>';
-  document.getElementById('docViewer').classList.add('show');
-
-  const ext = doc.name.split('.').pop().toLowerCase();
-  const type = doc.type || '';
-
-  try {
-    if (type.startsWith('image/')) {
-      content.innerHTML = '';
-      const img = document.createElement('img');
-      img.src = doc.data;
-      content.appendChild(img);
-
-    } else if (type === 'application/pdf' || ext === 'pdf') {
-      // Use PDF.js for reliable PDF rendering
-      await _loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-      const base64 = doc.data.split(',')[1];
-      const binary = atob(base64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
-      content.innerHTML = '';
-      content.style.overflowY = 'auto';
-      for (let p = 1; p <= pdf.numPages; p++) {
-        const page = await pdf.getPage(p);
-        const vp = page.getViewport({ scale: 1.4 });
-        const canvas = document.createElement('canvas');
-        canvas.width = vp.width; canvas.height = vp.height;
-        canvas.style.cssText = 'display:block;margin:0 auto 4px;max-width:100%';
-        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
-        content.appendChild(canvas);
-      }
-
-    } else if (ext === 'docx' || type.includes('word') || type.includes('document')) {
-      await _loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js');
-      const base64 = doc.data.split(',')[1];
-      const binary = atob(base64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      const result = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer });
-      content.innerHTML = `<div style="padding:1.5rem 2rem;font-family:Georgia,serif;font-size:.95rem;line-height:1.7;color:#222;max-width:800px;margin:0 auto">${result.value}</div>`;
-
-    } else if (ext === 'xlsx' || ext === 'xls' || type.includes('sheet') || type.includes('excel')) {
-      await _loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
-      const base64 = doc.data.split(',')[1];
-      const workbook = XLSX.read(base64, { type: 'base64' });
-      let html = '<div style="padding:1rem;overflow-x:auto">';
-      workbook.SheetNames.forEach(name => {
-        html += `<h3 style="font-size:.9rem;margin:.5rem 0;color:#333">${esc(name)}</h3>`;
-        html += '<table style="border-collapse:collapse;font-size:.8rem;margin-bottom:1rem">';
-        const ws = workbook.Sheets[name];
-        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-        data.forEach((row, i) => {
-          html += '<tr>';
-          row.forEach(cell => {
-            const tag = i === 0 ? 'th' : 'td';
-            const style = i === 0 ? 'background:#f0f0f0;font-weight:600;' : '';
-            html += `<${tag} style="border:1px solid #ccc;padding:4px 8px;${style}">${esc(String(cell ?? ''))}</${tag}>`;
-          });
-          html += '</tr>';
-        });
-        html += '</table>';
-      });
-      html += '</div>';
-      content.innerHTML = html;
-
-    } else {
-      content.innerHTML = `<div style="padding:2rem;text-align:center;color:#333">
-        <p style="font-size:2rem">📄</p>
-        <p style="font-weight:600">${esc(doc.name)}</p>
-        <p style="color:#666;font-size:.85rem">Este formato no tiene previsualización.<br>Descárgalo para abrirlo.</p>
-        <button onclick="dlDoc('${doc.id}')" style="margin-top:1rem;padding:.5rem 1.2rem;background:#0f6;border:none;border-radius:6px;cursor:pointer;font-weight:600">⬇ Descargar</button>
-      </div>`;
-    }
-  } catch(e) {
-    content.innerHTML = `<div style="padding:2rem;text-align:center;color:#c00">Error al cargar: ${esc(e.message)}</div>`;
-  }
-}
-
-function _loadScript(src) {
-  return new Promise((res, rej) => {
-    if (document.querySelector('script[src="' + src + '"]')) { res(); return; }
-    const s = document.createElement('script');
-    s.src = src; s.onload = res; s.onerror = rej;
-    document.head.appendChild(s);
-  });
-}
-
-async function closeDocViewer(broadcast = false) {
-  document.getElementById('docViewer').classList.remove('show');
-  if (broadcast && _currentDocId) {
-    await sendData({ type: 'close-doc' });
-  }
-  _currentDocId = null;
-}
-
-async function shareDocScreen() {
-  if (!_currentDocId) return;
-  const doc = sharedDocs.find(d => d.id === _currentDocId);
-  if (!doc) return;
-  // Only send docId + name — doc data already shared via doc-share event
-  // LiveKit has ~15KB packet limit so we cannot include the file here
-  await sendData({ type: 'show-doc', docId: _currentDocId, senderName: myName, docName: doc.name });
-  toast('Documento compartido en pantalla 📡');
-}
 
 </script>
 </body>
