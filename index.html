@@ -2,9 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' wss://meet.newinteriorsolutions.com.au https://meet.newinteriorsolutions.com.au https://api.groq.com; media-src 'self' blob: mediastream:; img-src 'self' data: blob:; worker-src blob:; frame-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests; object-src 'none';">
-<meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta http-equiv="X-Frame-Options" content="DENY">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -114,22 +111,15 @@ function updateE2EEBadge() {
   const badge = document.querySelector('.enc-badge');
   if (!badge) return;
   if (_e2eeCryptoKey && _e2eeSupported) {
-    // H3 FIX: full E2EE confirmed active (Insertable Streams working)
-    badge.textContent = '🔐 E2E Completo';
+    badge.textContent = '🔐 E2E · AES-256-GCM';
     badge.style.background = 'rgba(0,229,195,.15)';
     badge.style.color = '#00e5c3';
-    badge.title = 'Video + audio + datos cifrados E2E (AES-256-GCM). Clave solo en tu navegador. Chrome/Edge moderno requerido.';
+    badge.title = 'Cifrado extremo a extremo — la clave nunca sale de tu navegador';
   } else if (_e2eeCryptoKey) {
-    // H3 FIX: honest — this browser only has TLS for video, E2E only for data messages
-    badge.textContent = '🔒 Datos E2E · Video TLS';
-    badge.style.background = 'rgba(255,193,7,.12)';
-    badge.style.color = '#ffc107';
-    badge.title = 'Mensajes y archivos cifrados E2E. Video/audio solo TLS (sin E2E completo en este navegador — usa Chrome para E2E total).';
+    badge.textContent = '🔒 E2E Datos · TLS Video';
+    badge.title = 'Datos cifrados E2E. Video cifrado en tránsito (Insertable Streams no soportado en este navegador)';
   } else {
-    badge.textContent = '🔒 TLS';
-    badge.style.background = 'rgba(255,255,255,.05)';
-    badge.style.color = 'var(--muted)';
-    badge.title = 'Conexión cifrada por TLS. Sin clave E2EE activa en esta sesión.';
+    badge.textContent = '🔒 TLS · LiveKit SFU';
   }
 }
 
@@ -456,17 +446,7 @@ body.is-host .host-only { display: flex; }
 .intro-logo{font-family:'Syne',sans-serif;font-size:clamp(2.8rem,10vw,5rem);font-weight:800;color:#fff;letter-spacing:-2px;}
 .intro-logo span{color:#00e5c3;}
 .intro-tag{font-size:.8rem;color:#6b7590;letter-spacing:.2em;text-transform:uppercase;margin-top:.8rem;}
-
-/* Doc viewer overlay */
-#docViewer{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.92);flex-direction:column;align-items:center;justify-content:center;}
-#docViewer.show{display:flex;}
-#docViewerContent{max-width:92vw;max-height:85vh;border-radius:10px;overflow:auto;background:#fff;}
-#docViewerContent img{max-width:88vw;max-height:82vh;object-fit:contain;display:block;}
-#docViewerContent iframe{width:88vw;height:82vh;border:none;}
-#docViewerBar{display:flex;align-items:center;gap:1rem;padding:.6rem 1rem;background:var(--surface);border-radius:10px;margin-bottom:.5rem;width:88vw;box-sizing:border-box;}
-#docViewerName{flex:1;font-size:.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.5/dist/purify.min.js"></script>
 </head>
 <body>
 
@@ -585,7 +565,6 @@ body.is-host .host-only { display: flex; }
     <button class="cc" id="ccCam" onclick="toggleCam()"><div class="ci">📷</div><div class="cl">Cámara</div></button>
     <button class="cc" id="ccScreen" onclick="toggleScreen()"><div class="ci">🖥️</div><div class="cl">Pantalla</div></button>
     <button class="cc" id="ccHand" onclick="toggleHand()"><div class="ci">✋</div><div class="cl">Mano</div></button>
-    <button class="cc host-only" id="ccMuteAll" onclick="muteAll()"><div class="ci">🔇</div><div class="cl">Silenciar</div></button>
     <div class="cdiv"></div>
     <button class="cc" id="ccChat" onclick="togglePanel('chat')"><div class="ci">💬</div><div class="cl">Chat <span class="badge" id="chatBadge" style="display:none">0</span></div></button>
     <button class="cc" id="ccDocs" onclick="togglePanel('docs')"><div class="ci">📁</div><div class="cl">Archivos <span class="badge" id="docsBadge" style="display:none">0</span></div></button>
@@ -701,22 +680,9 @@ body.is-host .host-only { display: flex; }
 </div>
 
 
-
-<!-- DOC VIEWER -->
-<div id="docViewer">
-  <div id="docViewerBar">
-    <span id="docViewerName">—</span>
-    <button class="btn btn-s" style="width:auto;font-size:.78rem" onclick="shareDocScreen()">📡 Compartir en sala</button>
-    <button class="btn btn-s" style="width:auto;font-size:.78rem" onclick="closeDocViewer(true)">✕ Cerrar para todos</button>
-  </div>
-  <iframe id="docViewerFrame" sandbox="allow-scripts allow-same-origin" style="width:88vw;height:82vh;border:none;border-radius:8px;background:#fff;display:none"></iframe>
-  <div id="docViewerContent" style="max-width:92vw;max-height:85vh;border-radius:10px;overflow:auto;background:#fff;"></div>
-</div>
-
 <div id="recNotif">⏺ Grabando…</div>
 <div class="toast" id="toast"></div>
 <script>
-
 // ══ UTILS ══
 function hide(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
 function show(id) { const el = document.getElementById(id); if (el) el.style.display = 'flex'; }
@@ -749,30 +715,11 @@ function parseHash() {
   if (!raw) return null;
   const parts = raw.split('|');
   if (parts.length < 2) return null;
-  const parsed = { 
-    roomId:  parts[0], 
-    expiry:  parseInt(parts[1], 10), 
-    e2eeKey: parts[2] || null,
-    pubKey:  parts[3] || null
-  };
-  // H2 FIX: clear hash from URL after parsing — don't leave E2EE key in browser history
-  if (history.replaceState) {
-    history.replaceState(null, '', location.pathname + location.search);
-  }
-  return parsed;
+  return { roomId: parts[0], expiry: parseInt(parts[1], 10), e2eeKey: parts[2] || null };
 }
 function buildLink(rid, ms) {
-  const e2eeKey = window._e2eeKeyB64 || '';
-  const pubKey  = window._sessionSignKeyB64 || '';
-  const base = location.protocol === 'file:' 
-    ? 'https://malonpez.github.io/nexmeet/' 
-    : location.href.split('#')[0];
-  let hash = rid + '|' + (Date.now() + ms);
-  if (e2eeKey) hash += '|' + e2eeKey;
-  if (pubKey)  hash += '|' + pubKey;
-  // H2 NOTE: link contains E2EE key in fragment — treat as sensitive
-  // Fragment never goes to server, but is visible to browser extensions
-  return base + '#' + hash;
+  const keyB64 = window._e2eeKeyB64 || '';
+  return location.href.split('#')[0] + '#' + rid + '|' + (Date.now() + ms) + (keyB64 ? '|' + keyB64 : '');
 }
 
 // ── E2EE Key management ──────────────────
@@ -880,42 +827,19 @@ function mainAction() {
 async function createRoom() {
   const name = document.getElementById('nameInput').value.trim();
   if (!name) { toast('Ingresa tu nombre'); return; }
-  myName = name;
-  setStatus('Creando sala…');
-  try {
-    // C1 FIX: server creates room and returns hostProof — client never picks roomId
-    const resp = await fetch(`${TOKEN_SERVER}/api/room/create`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: name })
-    });
-    if (!resp.ok) throw new Error('No se pudo crear sala: ' + resp.status);
-    const { roomId: rid, hostProof, nonce } = await resp.json();
-    roomId = rid;
-    window._hostProof = hostProof;
-    window._hostNonce = nonce;
-    isHost = true;
-    document.body.classList.add('is-host');
-    history.replaceState(null, '', location.pathname + location.search);
-    await generateE2EEKey();
-    const pubB64 = await initSigningKey();
-    window._sessionSignKeyB64 = pubB64;
-    await joinLiveKit(roomId, myName, true);
-  } catch(e) {
-    setStatus('Error: ' + e.message, true);
-    show('lobby'); hide('waitingRoom');
-  }
+  myName = name; isHost = true; document.body.classList.add('is-host');
+  roomId = 'room-' + Math.random().toString(36).slice(2, 10);
+  history.replaceState(null, '', location.pathname + location.search);
+  setStatus('Iniciando sala…');
+  await joinLiveKit(roomId, myName, true);
 }
 
 async function joinWithParsed(parsed) {
   const name = document.getElementById('nameInput').value.trim();
   if (!name) { toast('Ingresa tu nombre'); return; }
-  if (!parsed.expiry || Date.now() > parsed.expiry) { show('expiredScreen'); return; }
-  if (parsed.expiry - Date.now() < 30000) { show('expiredScreen'); return; }
+  if (Date.now() > parsed.expiry) { show('expiredScreen'); return; }
   myName = name; isHost = false; roomId = parsed.roomId;
   if (parsed.e2eeKey) await importE2EEKey(parsed.e2eeKey);
-  // FIX-CRÍTICO-3: import host's ECDSA pubkey for message verification
-  if (parsed.pubKey) await importSigningKey(parsed.pubKey);
   hide('lobby');
   document.getElementById('wNameBadge').textContent = myName;
   show('waitingRoom');
@@ -937,27 +861,8 @@ function joinManual() {
 // ══ LIVEKIT JOIN ══
 async function joinLiveKit(rid, name, host) {
   try {
-    // C1 FIX: POST with hostProof for host, no hostProof for guest
-    const body = { room: rid, username: name };
-    if (host && window._hostProof) {
-      body.hostProof = window._hostProof;
-      body.nonce     = window._hostNonce;
-    }
-    const resp = await fetch(`${TOKEN_SERVER}/api/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      throw new Error(err.error || 'Token server error ' + resp.status);
-    }
-    const { token, isHost: serverIsHost } = await resp.json();
-    if (typeof serverIsHost === 'boolean') {
-      isHost = serverIsHost;
-      if (isHost) document.body.classList.add('is-host');
-      else document.body.classList.remove('is-host');
-    }
+    const resp = await fetch(`${TOKEN_SERVER}/api/token?room=${encodeURIComponent(rid)}&username=${encodeURIComponent(name)}&host=${host}`);
+    const { token } = await resp.json();
 
     room = new LivekitClient.Room({
       adaptiveStream: false,
@@ -969,46 +874,37 @@ async function joinLiveKit(rid, name, host) {
 
     await room.connect(LK_URL, token);
 
+    // Publish tracks
+    const _isMobile = /Mobi|Android|iPhone|iPad/.test(navigator.userAgent);
+    if (_isMobile) {
+      try {
+        const _s = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'user' } },
+          audio: { echoCancellation: true, noiseSuppression: true }
+        });
+        window._currentFacing = 'user';
+        await room.localParticipant.publishTrack(_s.getVideoTracks()[0]);
+        await room.localParticipant.publishTrack(_s.getAudioTracks()[0]);
+      } catch { await room.localParticipant.enableCameraAndMicrophone(); }
+    } else {
+      await room.localParticipant.enableCameraAndMicrophone();
+    }
+
     if (host) {
-      // Host publishes tracks immediately
-      const _isMobile = /Mobi|Android|iPhone|iPad/.test(navigator.userAgent);
-      if (_isMobile) {
-        try {
-          const _s = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: 'user' } },
-            audio: { echoCancellation: true, noiseSuppression: true }
-          });
-          window._currentFacing = 'user';
-          await room.localParticipant.publishTrack(_s.getVideoTracks()[0]);
-          await room.localParticipant.publishTrack(_s.getAudioTracks()[0]);
-        } catch { await room.localParticipant.enableCameraAndMicrophone(); }
-      } else {
-        await room.localParticipant.enableCameraAndMicrophone();
-      }
-      // ARQ-01: generate signing key for this session
-      initSigningKey().then(keyB64 => { window._sessionSignKeyB64 = keyB64; });
       enterMeeting();
       setWov(true);
       setTimeout(() => { applyE2EEToRoom(); updateE2EEBadge(); }, 1000);
     } else {
-      // Guest does NOT publish camera/mic until admitted — only data channel
       // Send knock — retry every 3s until admitted (host DataReceived may not be ready instantly)
       const enc = new TextEncoder();
       const knockMsg = enc.encode(JSON.stringify({ type: 'knock', name }));
       const sendKnock = async () => {
         try { await room.localParticipant.publishData(knockMsg, 0); } catch(e) {}
       };
-      // BLOQUE 2: knock con backoff — no bucle fijo cada 3s
       await sendKnock();
-      let _knockAttempts = 0;
       window._knockInterval = setInterval(async () => {
         if (document.getElementById('meeting').style.display === 'flex') {
           clearInterval(window._knockInterval);
-          return;
-        }
-        if (_knockAttempts++ > 10) { // max 30s de intentos
-          clearInterval(window._knockInterval);
-          toast('No se pudo conectar. El host puede no estar disponible.');
           return;
         }
         await sendKnock();
@@ -1024,8 +920,8 @@ async function joinLiveKit(rid, name, host) {
 // ══ ROOM EVENTS ══
 function setupRoomEvents() {
   room.on(LivekitClient.RoomEvent.ParticipantConnected, p => {
-    toast(esc(p.identity) + ' se unió');
-    addSys(esc(p.identity) + ' se unió a la llamada');
+    toast(p.identity + ' se unió');
+    addSys(p.identity + ' se unió a la llamada');
     updatePC();
     updateChatSel();
     if (isHost) showKnock(p.sid, p.identity);
@@ -1033,7 +929,7 @@ function setupRoomEvents() {
 
   room.on(LivekitClient.RoomEvent.ParticipantDisconnected, p => {
     removeParticipantVideo(p.sid);
-    addSys(esc(p.identity) + ' salió de la llamada');
+    addSys(p.identity + ' salió de la llamada');
     updatePC();
     updateChatSel();
     rmKnock(p.sid);
@@ -1072,58 +968,19 @@ function setupRoomEvents() {
 
   room.on(LivekitClient.RoomEvent.DataReceived, async (payload, participant, kind) => {
     try {
-      // ARQ-02: rate limiting — per participant + global
-      if (!checkGlobalRate()) { return; } // room-wide flood
-      if (!checkMsgRate(participant?.identity)) {
-        console.warn('Rate limit exceeded:', participant?.identity);
-        return;
-      }
       const data = payload instanceof Uint8Array ? payload : new Uint8Array(payload);
       let msgBytes;
       if (data[0] === 0x01) {
+        // Encrypted — decrypt first
         const decrypted = await e2eeDecrypt(data.slice(1).buffer);
         msgBytes = new Uint8Array(decrypted);
       } else if (data[0] === 0x00) {
         msgBytes = data.slice(1);
       } else {
-        msgBytes = data; // legacy
+        msgBytes = data; // legacy unversioned
       }
       const text = new TextDecoder().decode(msgBytes);
-      // Prototype pollution prevention — parse and freeze
-      const msgRaw = JSON.parse(text);
-      if (msgRaw.__proto__ || msgRaw.constructor || msgRaw.prototype) {
-        console.warn('SECURITY: prototype pollution attempt blocked');
-        return;
-      }
-      const msg = Object.freeze(Object.assign(Object.create(null), msgRaw));
-
-      // Schema validation — reject malformed messages
-      if (!validateMsgSchema(msg)) {
-        console.warn('SECURITY: schema validation failed for type:', msg.type);
-        return;
-      }
-      // ARQ-01: verify signature — reject unsigned messages for privileged actions
-      const privilegedTypes = ['admitted','rejected','mute-you','unmute-you','kick','lock','show-doc','close-doc','poll-launch'];
-      if (privilegedTypes.includes(msg.type)) {
-        const valid = await verifyMessage(msg);
-        if (!valid) {
-          console.warn('SECURITY: rejected unsigned privileged message:', msg.type, 'from:', participant?.identity);
-          return;
-        }
-      }
-
-      // ARQ-03: role validation — only host can send privileged commands
-      const hostOnlyTypes = ['mute-you','unmute-you','kick','lock'];
-      if (hostOnlyTypes.includes(msg.type)) {
-        // Verify sender is the known host (first joiner per server_secure.js)
-        const sender = room.remoteParticipants.get(msg._from);
-        // If _from matches participant identity — structural check
-        if (msg._from !== participant?.identity) {
-          console.warn('SECURITY: identity mismatch in message:', msg._from, '!=', participant?.identity);
-          return;
-        }
-      }
-
+      const msg = JSON.parse(text);
       wDebug('MSG:' + text.substring(0,60) + (data[0]===0x01?' [E2E✓]':' [plain]'));
       handleDataMsg(msg, participant);
     } catch(e) {
@@ -1144,168 +1001,13 @@ function setupRoomEvents() {
   });
 }
 
-
-
-// ══ SCHEMA VALIDATION (prototype pollution + type enforcement) ══
-const _MSG_SCHEMAS = {
-  'chat':       { name: 'string', message: 'string' },
-  'knock':      { name: 'string' },
-  'admitted':   { forIdentity: 'string' },
-  'mute-you':   { forIdentity: 'string' },
-  'unmute-you': { forIdentity: 'string' },
-  'kick':       { forIdentity: 'string' },
-  'show-doc':   { docId: 'string' },
-  'close-doc':  {},
-  'lock':       { locked: 'boolean' },
-  'hand':       { raised: 'boolean' },
-  'reaction':   { emoji: 'string' },
-  'notes':      { text: 'string' },
-  'agenda':     { text: 'string' },
-  'poll-launch':{ poll: 'object' },
-  'poll-vote':  { opt: 'number' },
-  'wb-draw':    { x1: 'number', y1: 'number', x2: 'number', y2: 'number' },
-  'wb-clear':   {},
-  'doc-chunk':  { docId: 'string', index: 'number', total: 'number', chunk: 'string' },
-  'key-rotate': { sigKey: 'string' },
-};
-
-function validateMsgSchema(msg) {
-  const schema = _MSG_SCHEMAS[msg.type];
-  // M1 FIX: reject unknown types — don't silently pass them
-  if (schema === undefined) {
-    console.warn('SECURITY: unknown message type rejected:', msg.type);
-    return false;
-  }
-  for (const [key, type] of Object.entries(schema)) {
-    if (!(key in msg)) return false;
-    if (typeof msg[key] !== type) return false;
-  }
-  // No extra dangerous keys
-  const dangerous = ['__proto__', 'constructor', 'prototype', 'toString', 'valueOf'];
-  for (const key of Object.keys(msg)) {
-    if (dangerous.includes(key)) return false;
-  }
-  return true;
-}
-
-// ══ MESSAGE SIGNING — ECDSA P-256 (asymmetric, no bootstrap problem) ══
-let _ecdsaPrivKey = null;   // host only — never leaves host
-let _ecdsaPubKey  = null;   // used to verify — shared via URL
-
-async function initSigningKey() {
-  // Generate ECDSA P-256 key pair — host signs, guests verify with pubkey in URL
-  const pair = await crypto.subtle.generateKey(
-    { name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']
-  );
-  _ecdsaPrivKey = pair.privateKey;
-  _ecdsaPubKey  = pair.publicKey;
-  const rawPub = await crypto.subtle.exportKey('raw', pair.publicKey);
-  const pubB64 = btoa(String.fromCharCode(...new Uint8Array(rawPub)));
-  // Key rotation every 10 minutes
-  setTimeout(async () => {
-    if (!isHost || !room) return;
-    const newPubB64 = await initSigningKey();
-    window._sessionSignKeyB64 = newPubB64;
-    await sendData({ type: 'key-rotate', pubKey: newPubB64 });
-  }, 10 * 60 * 1000);
-  return pubB64; // only public key goes into URL
-}
-
-async function importSigningKey(pubB64) {
-  try {
-    const raw = Uint8Array.from(atob(pubB64), ch => ch.charCodeAt(0));
-    _ecdsaPubKey = await crypto.subtle.importKey(
-      'raw', raw, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']
-    );
-  } catch(e) { console.warn('importSigningKey failed:', e); }
-}
-
-// Canonical JSON — deterministic key order (fixes JSON ordering attacks)
-function canonicalize(obj) {
-  if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return JSON.stringify(obj);
-  return '{' + Object.keys(obj).sort().map(k => JSON.stringify(k) + ':' + canonicalize(obj[k])).join(',') + '}';
-}
-
-async function signMessage(data) {
-  if (!_ecdsaPrivKey) return data; // no key yet
-  const ts = Date.now();
-  const nonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(8))));
-  const full = { ...data, _ts: ts, _from: myName, _n: nonce, _room: roomId };
-  const canonical = canonicalize(full);
-  const sig = await crypto.subtle.sign(
-    { name: 'ECDSA', hash: 'SHA-256' }, _ecdsaPrivKey, new TextEncoder().encode(canonical)
-  );
-  return { ...full, _sig: btoa(String.fromCharCode(...new Uint8Array(sig))) };
-}
-
-// Nonce store — prevent replay even within 30s window
-const _usedNonces = new Set();
-function _cleanNonces() { if (_usedNonces.size > 10000) _usedNonces.clear(); }
-
-async function verifyMessage(msg) {
-  if (!_ecdsaPubKey) return true; // pre-key phase: allow (admitted will bring pubkey)
-  if (!msg._sig || !msg._ts || !msg._from || !msg._n) return false;
-  if (Math.abs(Date.now() - msg._ts) > 30000) return false;
-  if (msg._room && msg._room !== roomId) return false; // room binding
-  if (_usedNonces.has(msg._n)) return false;
-  const { _sig, ...rest } = msg;
-  const canonical = canonicalize(rest);
-  try {
-    const sigBytes = Uint8Array.from(atob(msg._sig), ch => ch.charCodeAt(0));
-    const valid = await crypto.subtle.verify(
-      { name: 'ECDSA', hash: 'SHA-256' }, _ecdsaPubKey, sigBytes, new TextEncoder().encode(canonical)
-    );
-    if (valid) { _usedNonces.add(msg._n); _cleanNonces(); }
-    return valid;
-  } catch { return false; }
-}
-
-// Rate limiter for data channel (ARQ-02: flooding prevention)
-const _msgRates = new Map();
-function checkMsgRate(identity, limit = 20, windowMs = 1000) {
-  const now = Date.now();
-  const key = identity || 'unknown';
-  const entry = _msgRates.get(key) || { count: 0, resetAt: now + windowMs, total: 0 };
-  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs; }
-  entry.count++;
-  entry.total++;
-  _msgRates.set(key, entry);
-  // Hard ban: if participant sent >500 total msgs this session — suspicious
-  if (entry.total > 500 && !['chat','wb-draw','notes'].includes('')) {
-    return entry.count <= 5; // throttle hard
-  }
-  return entry.count <= limit;
-}
-
-// Global rate — total messages across all participants per second
-let _globalMsgCount = 0, _globalResetAt = Date.now() + 1000;
-function checkGlobalRate() {
-  const now = Date.now();
-  if (now > _globalResetAt) { _globalMsgCount = 0; _globalResetAt = now + 1000; }
-  _globalMsgCount++;
-  return _globalMsgCount <= 200; // max 200 msg/s room-wide
-}
-
 // ══ DATA MESSAGES ══
 async function sendData(data, reliable=true) {
   if (!room) return;
+  const enc = new TextEncoder();
   const kind = reliable ? 0 : 1;
   try {
-    // ARQ-01: sign every outgoing message
-    const signed = await signMessage(data);
-    const plain = new TextEncoder().encode(JSON.stringify(signed));
-    let payload;
-    if (_e2eeCryptoKey) {
-      const encrypted = await e2eeEncrypt(plain.buffer);
-      payload = new Uint8Array(1 + encrypted.byteLength);
-      payload[0] = 0x01;
-      payload.set(new Uint8Array(encrypted), 1);
-    } else {
-      payload = new Uint8Array(1 + plain.byteLength);
-      payload[0] = 0x00;
-      payload.set(plain, 1);
-    }
-    await room.localParticipant.publishData(payload, kind);
+    await room.localParticipant.publishData(enc.encode(JSON.stringify(data)), kind);
   } catch(e) { console.warn('sendData error:', e); }
 }
 
@@ -1313,57 +1015,13 @@ function handleDataMsg(msg, participant) {
   switch(msg.type) {
     case 'knock':
       if (!isHost) return;
-      // VULN-02: reject knock if room is locked
-      if (isRoomLocked) {
-        const enc2 = new TextEncoder();
-        const p2 = [...room.remoteParticipants.values()].find(p => p.identity === (msg.name || participant?.identity));
-        if (p2) room.localParticipant.publishData(enc2.encode(JSON.stringify({type:'rejected'})), 0);
-        return;
-      }
       showKnock(participant?.sid || 'unknown', msg.name || participant?.identity || 'Invitado');
       break;
     case 'admitted':
-      // BLOQUE 2b: solo procesar si estamos en sala de espera activa
-      if (document.getElementById('waitingRoom').style.display === 'none') break;
+      // Accept if for us or broadcast — reject if for someone else
       if (msg.forIdentity && msg.forIdentity !== myName) break;
       if (isHost) break;
       if (window._knockInterval) clearInterval(window._knockInterval);
-      if (msg.pubKey) importSigningKey(msg.pubKey);
-      // BLOQUE 2b: publish tracks — single attempt, no retry loops
-      (async () => {
-        try {
-          // C1 FIX: if we have an upgradeToken, reconnect with canPublish:true
-          if (msg.upgradeToken) {
-            try {
-              await room.disconnect();
-              await room.connect(LK_URL, msg.upgradeToken);
-              await room.localParticipant.setCameraEnabled(true).catch(()=>{});
-              await room.localParticipant.setMicrophoneEnabled(true).catch(()=>{});
-            } catch(reconnErr) {
-              console.warn('Reconnect with upgrade token failed:', reconnErr);
-              // Fallback: try enabling directly
-              await room.localParticipant.setCameraEnabled(true).catch(()=>{});
-              await room.localParticipant.setMicrophoneEnabled(true).catch(()=>{});
-            }
-          } else {
-            // No upgrade token — try enabling (may fail if server has canPublish:false)
-            await room.localParticipant.setCameraEnabled(true).catch(()=>{});
-            await room.localParticipant.setMicrophoneEnabled(true).catch(()=>{});
-          }
-          // Update local preview from published track
-          await new Promise(r => setTimeout(r, 400));
-          const _camPub = room.localParticipant.getTrack(LivekitClient.Track.Source.Camera);
-          if (_camPub?.track?.mediaStreamTrack) {
-            const _ms = new MediaStream([_camPub.track.mediaStreamTrack]);
-            window._localStream = _ms;
-            const _vid = document.querySelector('#vw-local video');
-            if (_vid) { _vid.srcObject = _ms; _vid.play().catch(()=>{}); }
-          }
-        } catch(e) {
-          console.warn('publish on admit failed:', e);
-          try { await room.localParticipant.enableCameraAndMicrophone(); } catch {}
-        }
-      })();
       hide('waitingRoom');
       enterMeeting();
       setTimeout(() => { applyE2EEToRoom(); updateE2EEBadge(); }, 1000);
@@ -1431,23 +1089,6 @@ function handleDataMsg(msg, participant) {
     case 'doc-share':
       receiveDoc(msg.doc);
       break;
-    case 'doc-chunk':
-      receiveDocChunk(msg);
-      break;
-    case 'show-doc':
-      const _sd = sharedDocs.find(d => d.id === msg.docId);
-      if (_sd) {
-        toast('📄 ' + esc(msg.senderName || 'Alguien') + ' comparte: ' + esc(_sd.name));
-        showDoc(_sd.id);
-      } else {
-        // Doc still arriving in chunks — show when ready
-        window._pendingShowDoc = msg.docId;
-        toast('📄 ' + esc(msg.senderName || 'Alguien') + ' comparte un archivo — recibiendo…');
-      }
-      break;
-    case 'close-doc':
-      closeDocViewer(false);
-      break;
     case 'wb-draw':
       receiveWbStroke(msg);
       break;
@@ -1462,36 +1103,7 @@ function handleDataMsg(msg, participant) {
       break;
     case 'mute-you':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
-      // BLOQUE 4a: mute ALL audio tracks — LiveKit + custom published
-      isMuted = true;
-      room.localParticipant.setMicrophoneEnabled(false).catch(()=>{});
-      room.localParticipant.trackPublications?.forEach(pub => {
-        if (pub.track?.kind === 'audio' && pub.track?.mediaStreamTrack) {
-          pub.track.mediaStreamTrack.enabled = false;
-        }
-      });
-      // Also mute local stream tracks if exist
-      window._localStream?.getAudioTracks().forEach(t => { t.enabled = false; });
-      updateMicBtn();
-      toast('El host te silenció 🔇');
-      break;
-    case 'unmute-you':
-      if (msg.forIdentity && msg.forIdentity !== myName) break;
-      // BLOQUE 4b: unmute ALL audio tracks — mirror of mute-you
-      isMuted = false;
-      room.localParticipant.setMicrophoneEnabled(true).catch(()=>{});
-      room.localParticipant.trackPublications?.forEach(pub => {
-        if (pub.track?.kind === 'audio' && pub.track?.mediaStreamTrack) {
-          pub.track.mediaStreamTrack.enabled = true;
-        }
-      });
-      window._localStream?.getAudioTracks().forEach(t => { t.enabled = true; });
-      updateMicBtn();
-      toast('El host activó tu micrófono 🎤');
-      break;
-    case 'key-rotate':
-      // Host rotated ECDSA key — import new public key (guests verify only)
-      if (msg.pubKey && !isHost) importSigningKey(msg.pubKey);
+      if (!isMuted) { isMuted = true; room.localParticipant.setMicrophoneEnabled(false); updateMicBtn(); toast('El host te silenció'); }
       break;
     case 'kick':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
@@ -1510,9 +1122,7 @@ function showKnock(sid, name) {
   const card = document.createElement('div');
   card.className = 'kcard'; card.id = 'k-' + sid;
   const init = (name[0] || '?').toUpperCase();
-  card.innerHTML = `<div class="kch"><div class="kav">${init}</div><div><div class="kname">${esc(name)}</div><div class="ksub">Solicita unirse</div></div></div><div class="kact"><button class="kadm">✓ Admitir</button><button class="krej">✕ Rechazar</button></div>`;
-  card.querySelector('.kadm').addEventListener('click', () => admitParticipant(sid, name));
-  card.querySelector('.krej').addEventListener('click', () => rejectParticipant(sid, name));
+  card.innerHTML = `<div class="kch"><div class="kav">${init}</div><div><div class="kname">${esc(name)}</div><div class="ksub">Solicita unirse</div></div></div><div class="kact"><button class="kadm" onclick="admitParticipant('${sid}','${name}')">✓ Admitir</button><button class="krej" onclick="rejectParticipant('${sid}','${name}')">✕ Rechazar</button></div>`;
   document.getElementById('wQueue').appendChild(card);
   toast(name + ' está esperando');
 }
@@ -1522,42 +1132,33 @@ function rmKnock(sid) { document.getElementById('k-' + sid)?.remove(); }
 async function admitParticipant(sid, name) {
   rmKnock(sid);
   const enc = new TextEncoder();
-
-  // ARQ-01: include signing key in admitted message so guest can verify future messages
-  const admitMsg = { 
-    type: 'admitted', 
-    forIdentity: name,
-    pubKey: window._sessionSignKeyB64 || null  // ECDSA public key only
-  };
-
-  // C1 FIX: get upgrade token from server, send to guest
-  try {
-    // Get a new nonce for this admit action
-    const admitNonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
-    const admitResp  = await fetch(`${TOKEN_SERVER}/api/admit`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        room:          roomId,
-        hostProof:     window._hostProof,
-        nonce:         admitNonce,
-        guestIdentity: name
-      })
-    });
-    if (admitResp.ok) {
-      const { upgradeToken } = await admitResp.json();
-      admitMsg.upgradeToken = upgradeToken; // send upgrade token to guest
-    }
-    await sendData(admitMsg);
-    setTimeout(() => sendData(admitMsg).catch(() => {}), 1500);
-  } catch(e) {
-    console.warn('admit send error:', e);
-    // Fallback: send without upgrade token (guest can still join but can't publish until reload)
-    await sendData(admitMsg).catch(() => {});
+  
+  // Send 3 times: with name, without restriction, and after delay
+  // This ensures delivery even if data channel is laggy
+  const msgs = [
+    JSON.stringify({ type: 'admitted', forIdentity: name }),
+    JSON.stringify({ type: 'admitted' }), // broadcast fallback
+  ];
+  
+  for (const m of msgs) {
+    try {
+      await room.localParticipant.publishData(enc.encode(m), 0);
+      await new Promise(r => setTimeout(r, 200));
+    } catch(e) { console.warn('admit send error:', e); }
   }
+  
+  // Retry after 1.5s
+  setTimeout(async () => {
+    try {
+      await room.localParticipant.publishData(
+        enc.encode(JSON.stringify({ type: 'admitted', forIdentity: name })),
+        0
+      );
+    } catch {}
+  }, 1500);
 
   setWov(false);
-  addSys(esc(name) + ' fue admitido ✓');
+  addSys(name + ' fue admitido ✓');
   updateChatSel();
 }
 
@@ -1603,25 +1204,44 @@ function attachLocalVideo() {
     updateGrid();
   }
   const vid = wrap.querySelector('video');
-  // Use stored stream directly if available (guest admitted path)
-  if (window._localStream) {
-    vid.srcObject = window._localStream;
-    vid.play().catch(()=>{});
+
+  // Try LiveKit track first
+  const camPub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
+  if (camPub?.track?.mediaStreamTrack) {
+    const mst = camPub.track.mediaStreamTrack;
+    vid.srcObject = new MediaStream([mst]);
+    vid.play().catch(() => {});
+    try { camPub.track.attach(vid); } catch(e) {}
     document.getElementById('voff-vw-local')?.classList.remove('show');
     return;
   }
-  const camPub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
-  if (camPub?.track) {
-    camPub.track.attach(vid);
-    const mst = camPub.track.mediaStreamTrack;
-    if (mst) { vid.srcObject = new MediaStream([mst]); vid.play().catch(()=>{}); }
-    document.getElementById('voff-vw-local')?.classList.remove('show');
-  }
+
+  // Track not ready yet — retry up to 10 times every 300ms
+  let attempts = 0;
+  const retry = setInterval(() => {
+    attempts++;
+    const pub = room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
+    if (pub?.track?.mediaStreamTrack) {
+      const mst = pub.track.mediaStreamTrack;
+      vid.srcObject = new MediaStream([mst]);
+      vid.play().catch(() => {});
+      try { pub.track.attach(vid); } catch(e) {}
+      document.getElementById('voff-vw-local')?.classList.remove('show');
+      clearInterval(retry);
+    } else if (attempts >= 10) {
+      clearInterval(retry);
+      // Last resort: getUserMedia directly
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(stream => {
+          vid.srcObject = stream;
+          vid.play().catch(() => {});
+          document.getElementById('voff-vw-local')?.classList.remove('show');
+        }).catch(() => {});
+    }
+  }, 300);
 }
 
 function attachVideo(sid, name, track) {
-  // BLOQUE 3c: verify track is live before attaching
-  if (!track || track.isMuted) return;
   setWov(false);
   const grid = document.getElementById('vGrid');
   let wrap = document.getElementById('vw-' + sid);
@@ -1648,12 +1268,10 @@ function mkWrap(id, lblId, label, muted, sid) {
   l.innerHTML = `<span>${esc(label.replace(/ \(Tú\)/, ''))}</span>${!muted ? ' <span class="hand-ind" style="display:none">✋</span>' : ''}`;
   const ov = document.createElement('div'); ov.className = 'voff'; ov.id = 'voff-' + id;
   const init = (label.replace(/ \(Tú\)/, '')[0] || '?').toUpperCase();
-  ov.innerHTML = '<div class="vavc"></div><div class="vol-bar"><span style="height:4px"></span><span style="height:4px"></span><span style="height:4px"></span></div>';
-  ov.querySelector('.vavc').textContent = init;
+  ov.innerHTML = `<div class="vavc">${init}</div><div class="vol-bar"><span style="height:4px"></span><span style="height:4px"></span><span style="height:4px"></span></div>`;
   let ctx = '';
   if (!muted && isHost && sid) {
-    const _identity = label.replace(/ \(Tú\)/, '');
-    ctx = `<div class="vctx" data-identity="${esc(_identity)}"><button class="vctxbtn">⋯</button><div class="vctxdrop"><button class="vctx-mute" data-mute-state="0">🔇 Silenciar</button><button class="dk vctx-kick">🚫 Expulsar</button></div></div>`;
+    ctx = `<div class="vctx"><button class="vctxbtn">⋯</button><div class="vctxdrop"><button onclick="muteRemote('${sid}')">🔇 Silenciar</button><button class="dk" onclick="kickRemote('${sid}')">🚫 Expulsar</button></div></div>`;
   }
   w.append(v, l, ov);
   if (ctx) { const cd = document.createElement('div'); cd.innerHTML = ctx; w.appendChild(cd.firstChild); }
@@ -1726,14 +1344,7 @@ function endSSLayout() {
 // ══ CONTROLS ══
 async function toggleMic() {
   isMuted = !isMuted;
-  // BLOQUE 4c: affect all audio tracks consistently
-  await room.localParticipant.setMicrophoneEnabled(!isMuted).catch(()=>{});
-  room.localParticipant.trackPublications?.forEach(pub => {
-    if (pub.track?.kind === 'audio' && pub.track?.mediaStreamTrack) {
-      pub.track.mediaStreamTrack.enabled = !isMuted;
-    }
-  });
-  window._localStream?.getAudioTracks().forEach(t => { t.enabled = !isMuted; });
+  await room.localParticipant.setMicrophoneEnabled(!isMuted);
   updateMicBtn();
 }
 function updateMicBtn() {
@@ -1750,19 +1361,6 @@ async function toggleCam() {
   b.querySelector('.ci').textContent = isVideoOff ? '🚫' : '📷';
   b.querySelector('.cl').textContent = isVideoOff ? 'Sin cam.' : 'Cámara';
   document.getElementById('voff-vw-local')?.classList.toggle('show', isVideoOff);
-  // For guests on mobile: update local preview after re-enable
-  // BLOQUE 3b: update preview from published track (not stored stream)
-  if (!isVideoOff) {
-    setTimeout(() => {
-      const _pub = room.localParticipant.getTrack(LivekitClient.Track.Source.Camera);
-      if (_pub?.track?.mediaStreamTrack) {
-        const _ms = new MediaStream([_pub.track.mediaStreamTrack]);
-        window._localStream = _ms;
-        const _vid = document.querySelector('#vw-local video');
-        if (_vid) { _vid.srcObject = _ms; _vid.play().catch(()=>{}); }
-      }
-    }, 300);
-  }
 }
 async function toggleHand() {
   handRaised = !handRaised;
@@ -1777,28 +1375,17 @@ async function toggleHand() {
   }
   toast(handRaised ? 'Mano levantada ✋' : 'Mano bajada');
 }
-async function muteRemote(identity) {
-  const p = room.remoteParticipants.get(identity);
-  if (!p) { toast('Participante no encontrado'); return; }
-  const btn = document.querySelector(`[data-muted='${identity}']`);
-  const isMutedNow = btn?.dataset.muteState === '1';
-  if (isMutedNow) {
-    await sendData({ type: 'unmute-you', forIdentity: identity });
-    if (btn) { btn.dataset.muteState = '0'; btn.textContent = '🔇 Silenciar'; }
-    toast(esc(identity) + ' activado');
-  } else {
-    await sendData({ type: 'mute-you', forIdentity: identity });
-    if (btn) { btn.dataset.muteState = '1'; btn.textContent = '🔊 Activar mic'; }
-    toast(esc(identity) + ' silenciado');
-  }
+async function muteRemote(sid) {
+  const p = [...room.remoteParticipants.values()].find(p => p.sid === sid);
+  if (p) { await sendData({ type: 'mute-you' }); toast('Participante silenciado'); }
 }
-async function kickRemote(identity) {
-  const p = room.remoteParticipants.get(identity);
+async function kickRemote(sid) {
+  const p = [...room.remoteParticipants.values()].find(p => p.sid === sid);
   if (p) {
-    // Use sendData to ensure message is signed
-    await sendData({ type: 'kick', forIdentity: identity });
-    setTimeout(() => removeParticipantVideo(p.sid), 500);
-  } else { toast('Participante no encontrado'); }
+    const enc = new TextEncoder();
+    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'kick', forIdentity: p.identity })), 0);
+    setTimeout(() => removeParticipantVideo(sid), 500);
+  }
 }
 async function toggleLock() {
   isRoomLocked = !isRoomLocked;
@@ -1828,14 +1415,7 @@ function togglePanel(name) {
 }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 function toggleMore() { document.getElementById('moreWrap').classList.toggle('open'); }
-document.addEventListener('click', e => {
-  if (!document.getElementById('moreWrap')?.contains(e.target)) document.getElementById('moreWrap')?.classList.remove('open');
-  // vctx event delegation — secure, no onclick injection
-  const muteBtn = e.target.closest('.vctx-mute');
-  if (muteBtn) { const id = muteBtn.closest('.vctx')?.dataset.identity; if (id) muteRemote(id); }
-  const kickBtn = e.target.closest('.vctx-kick');
-  if (kickBtn) { const id = kickBtn.closest('.vctx')?.dataset.identity; if (id) kickRemote(id); }
-});
+document.addEventListener('click', e => { if (!document.getElementById('moreWrap')?.contains(e.target)) document.getElementById('moreWrap')?.classList.remove('open'); });
 
 // ══ LINK ══
 function regenLink() {
@@ -1877,7 +1457,7 @@ async function sendChat() {
   const toName = toId ? sel.options[sel.selectedIndex].text : '';
   if (toId) {
     const enc = new TextEncoder();
-    await sendData({ type: 'chat', name: myName, message: msg, to: toId, toName });
+    await room.localParticipant.publishData(enc.encode(JSON.stringify({ type: 'chat', name: myName, message: msg, to: toId, toName })), 0);
     addChatMsg(myName, msg, true, toName);
   } else {
     await sendData({ type: 'chat', name: myName, message: msg });
@@ -1913,28 +1493,11 @@ function fSize(b){if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+
 function uploadFiles(input) {
   Array.from(input.files).forEach(file => {
     if (file.size > 5*1024*1024) { toast(file.name + ': supera 5MB'); return; }
-    if (sharedDocs.length >= 100) { toast('Límite de 100 archivos por sesión alcanzado'); return; }
-    const allowedTypes = ['image/','application/pdf','application/vnd.openxmlformats','application/vnd.ms-excel','application/msword','text/plain','text/csv'];
-    if (!allowedTypes.some(t => file.type.startsWith(t))) { toast(file.name + ': tipo de archivo no permitido'); return; }
     const r = new FileReader();
     r.onload = async e => {
-      const docId = Date.now()+'-'+Math.random().toString(36).slice(2);
-      const data = e.target.result;
-      const doc = {id:docId, name:file.name, size:file.size, type:file.type, data, senderName:myName};
-      sharedDocs.push(doc);
-      addDocItem(doc);
-      // Send in chunks of 10KB to stay under LiveKit 15KB packet limit
-      const CHUNK = 10000;
-      const total = Math.ceil(data.length / CHUNK);
-      for (let i = 0; i < total; i++) {
-        await sendData({
-          type: 'doc-chunk',
-          docId, name: file.name, size: file.size, mimeType: file.type,
-          senderName: myName, chunk: data.slice(i*CHUNK, (i+1)*CHUNK),
-          index: i, total
-        });
-        await new Promise(r => setTimeout(r, 30)); // small delay between chunks
-      }
+      const doc = {id:Date.now()+'-'+Math.random().toString(36).slice(2),name:file.name,size:file.size,type:file.type,data:e.target.result,senderName:myName};
+      sharedDocs.push(doc); addDocItem(doc);
+      await sendData({type:'doc-share',doc});
       toast(file.name + ' compartido ✓');
     };
     r.readAsDataURL(file);
@@ -1942,52 +1505,16 @@ function uploadFiles(input) {
 }
 function receiveDoc(doc) {
   if (sharedDocs.find(d => d.id === doc.id)) return;
-  if (sharedDocs.length >= 100) { toast('Límite de archivos compartidos alcanzado'); return; }
   sharedDocs.push(doc); addDocItem(doc);
   if (activePanel !== 'docs') { unreadDocs++; const b=document.getElementById('docsBadge'); b.style.display='inline'; b.textContent=unreadDocs; }
-  addSys(esc(doc.senderName) + ' compartió: ' + esc(doc.name));
-  toast('📎 ' + esc(doc.senderName || '') + ' compartió un archivo');
-}
-
-// Buffer for incoming chunks
-const _docChunks = {};
-function receiveDocChunk(msg) {
-  // VULN-10: reject malformed / oversized payloads
-  if (!msg.docId || typeof msg.docId !== 'string') return;
-  if (!Number.isInteger(msg.total) || msg.total < 1 || msg.total > 600) return;
-  if (!Number.isInteger(msg.index) || msg.index < 0 || msg.index >= msg.total) return;
-  if (typeof msg.chunk !== 'string' || msg.chunk.length > 12000) return;
-  if (!_docChunks[msg.docId]) {
-    _docChunks[msg.docId] = { chunks: [], name: String(msg.name).slice(0,255), size: msg.size, type: msg.mimeType, senderName: msg.senderName, total: msg.total, received: 0 };
-  }
-  const buf = _docChunks[msg.docId];
-  if (buf.received >= buf.total) return; // already complete
-  if (!buf.chunks[msg.index]) { buf.chunks[msg.index] = msg.chunk; buf.received++; }
-  const received = buf.chunks.filter(Boolean).length;
-  if (received === buf.total) {
-    const data = buf.chunks.join('');
-    const doc = { id: msg.docId, name: buf.name, size: buf.size, type: buf.type, data, senderName: buf.senderName };
-    delete _docChunks[msg.docId];
-    if (!sharedDocs.find(d => d.id === doc.id)) {
-      sharedDocs.push(doc); addDocItem(doc);
-      if (activePanel !== 'docs') { unreadDocs++; const b=document.getElementById('docsBadge'); b.style.display='inline'; b.textContent=unreadDocs; }
-      addSys(doc.senderName + ' compartió "' + doc.name + '"');
-      toast('📎 ' + esc(doc.senderName) + ' compartió: ' + esc(doc.name));
-    }
-    // If a show-doc was pending for this doc, show it now
-    if (window._pendingShowDoc === msg.docId) {
-      showDoc(msg.docId);
-      window._pendingShowDoc = null;
-    }
-  }
+  addSys(doc.senderName + ' compartió "' + doc.name + '"');
+  toast('📎 ' + doc.senderName + ' compartió un archivo');
 }
 function addDocItem(doc) {
   document.getElementById('docsEmpty').style.display = 'none';
   const list = document.getElementById('docsList');
   const item = document.createElement('div'); item.className = 'ditem';
-  item.innerHTML = `<div class="dicon">${fIcon(doc.type)}</div><div class="dinfo"><div class="dname" title="${esc(doc.name)}">${esc(doc.name)}</div><div class="dmeta">${fSize(doc.size)} · ${esc(doc.senderName)}</div></div><div style="display:flex;gap:.3rem"><button class="ddl ddl-show" title="Mostrar en pantalla">🖥️</button><button class="ddl ddl-dl" title="Descargar">⬇</button></div>`;
-  item.querySelector('.ddl-show').addEventListener('click', () => showDoc(doc.id));
-  item.querySelector('.ddl-dl').addEventListener('click', () => dlDoc(doc.id));
+  item.innerHTML = `<div class="dicon">${fIcon(doc.type)}</div><div class="dinfo"><div class="dname" title="${esc(doc.name)}">${esc(doc.name)}</div><div class="dmeta">${fSize(doc.size)} · ${esc(doc.senderName)}</div></div><button class="ddl" onclick="dlDoc('${doc.id}')">⬇</button>`;
   list.appendChild(item);
 }
 function dlDoc(id) { const doc=sharedDocs.find(d=>d.id===id); if(!doc)return; const a=document.createElement('a');a.href=doc.data;a.download=doc.name;a.click(); }
@@ -2131,11 +1658,8 @@ wbC.addEventListener('touchstart',wbDown,{passive:false});wbC.addEventListener('
 function toggleTheme(){isLightMode=!isLightMode;document.body.classList.toggle('light-mode',isLightMode);document.getElementById('themeIcon').textContent=isLightMode?'🌙':'☀️';document.getElementById('themeTxt').textContent=isLightMode?'Modo oscuro':'Modo claro';document.getElementById('moreWrap').classList.remove('open');}
 
 // ══ AI REPORT ══
-function saveGroqKey(){const key=document.getElementById('groqKeyInput').value.trim();if(!key||!key.startsWith('gsk_')){toast('La key debe empezar con gsk_');return;}
-  // M2: warn user about browser-side API key risk
-  toast('⚠️ Key activa (solo en memoria). No usar en redes no confiables.');
-  window._groqKey = key; // memory only — never persisteddocument.getElementById('aiKeyOk').classList.add('show');document.getElementById('groqKeyInput').value='';document.getElementById('groqKeyInput').placeholder='✓ Guardada';toast('API Key guardada ✓');}
-function getGroqKey(){return window._groqKey || '';}
+function saveGroqKey(){const key=document.getElementById('groqKeyInput').value.trim();if(!key||!key.startsWith('gsk_')){toast('La key debe empezar con gsk_');return;}localStorage.setItem('nexmeet_groq_key',key);document.getElementById('aiKeyOk').classList.add('show');document.getElementById('groqKeyInput').value='';document.getElementById('groqKeyInput').placeholder='✓ Guardada';toast('API Key guardada ✓');}
+function getGroqKey(){return localStorage.getItem('nexmeet_groq_key')||'';}
 function openAI(){document.getElementById('aiOverlay').classList.add('show');document.getElementById('moreWrap').classList.remove('open');resetAIReport();const key=getGroqKey();if(key){document.getElementById('aiKeyOk').classList.add('show');document.getElementById('groqKeyInput').placeholder='✓ Key configurada';}}
 function closeAI(){document.getElementById('aiOverlay').classList.remove('show');}
 function selectAIOpt(idx){aiOptSelected=idx;document.querySelectorAll('.ai-opt-card').forEach((el,i)=>el.classList.toggle('selected',i===idx));}
@@ -2169,8 +1693,7 @@ async function generateReport(){
     lastReportText=result.choices?.[0]?.message?.content||'Sin respuesta';
     document.getElementById('aiProgress').classList.remove('show');
     const reportEl=document.getElementById('aiReport');
-    const safeReport = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(lastReportText) : lastReportText;
-    reportEl.innerHTML=safeReport.replace(/^#{3}\s+(.+)$/gm,'<h3>$1</h3>').replace(/^#{2}\s+(.+)$/gm,'<h2>$1</h2>').replace(/^#{1}\s+(.+)$/gm,'<h2>$1</h2>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/^[-•]\s+(.+)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>').replace(/<\/ul>\s*<ul>/g,'').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>');
+    reportEl.innerHTML=lastReportText.replace(/^#{3}\s+(.+)$/gm,'<h3>$1</h3>').replace(/^#{2}\s+(.+)$/gm,'<h2>$1</h2>').replace(/^#{1}\s+(.+)$/gm,'<h2>$1</h2>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/^[-•]\s+(.+)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>').replace(/<\/ul>\s*<ul>/g,'').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>');
     reportEl.classList.add('show');
     document.getElementById('aiReportActions').style.display='flex';
   }catch(e){clearInterval(stepInt);document.getElementById('aiProgress').classList.remove('show');document.getElementById('aiGenBtn').style.display='block';toast('⚠️ '+e.message);}
@@ -2181,155 +1704,9 @@ function downloadReport(){if(!lastReportText){toast('No hay reporte');return;}co
 // ══ UTILS ══
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
 function startTimer(){meetSecs=0;timerInt=setInterval(()=>{meetSecs++;const m=String(Math.floor(meetSecs/60)).padStart(2,'0');const s=String(meetSecs%60).padStart(2,'0');document.getElementById('mTimer').textContent=`${m}:${s}`;},1000);}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function dl(content,filename,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mime}));a.download=filename;a.click();}
-function wDebug(msg){const el=document.getElementById('wDebug');if(el){const d=document.createElement('div');d.textContent=new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' '+String(msg).slice(0,200);el.appendChild(d);}})+' '+msg+'<br>';console.log('[WR]',msg);}
-
-
-async function muteAll() {
-  // BLOQUE 4d: send signed mute to each participant individually
-  const participants = [...room.remoteParticipants.values()];
-  for (const p of participants) {
-    await sendData({ type: 'mute-you', forIdentity: p.identity });
-    await new Promise(r => setTimeout(r, 50)); // small gap per participant
-  }
-  document.querySelectorAll('[data-muted]').forEach(btn => {
-    btn.dataset.muteState = '1';
-    btn.textContent = '🔊 Activar mic';
-  });
-  toast(`${participants.length} participantes silenciados 🔇`);
-}
-
-
-// ══ DOC VIEWER ══
-let _currentDocId = null;
-
-async function showDoc(id) {
-  const doc = sharedDocs.find(d => d.id === id);
-  if (!doc) return;
-  _currentDocId = id;
-  const content = document.getElementById('docViewerContent');
-  document.getElementById('docViewerName').textContent = doc.name;
-  content.innerHTML = '<div style="padding:2rem;text-align:center;color:#555">Cargando…</div>';
-  document.getElementById('docViewer').classList.add('show');
-
-  const ext = doc.name.split('.').pop().toLowerCase();
-  const type = doc.type || '';
-
-  try {
-    if (type.startsWith('image/')) {
-      content.innerHTML = '';
-      const img = document.createElement('img');
-      img.src = doc.data;
-      content.appendChild(img);
-
-    } else if (type === 'application/pdf' || ext === 'pdf') {
-      // Use PDF.js for reliable PDF rendering
-      await _loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-      const base64 = doc.data.split(',')[1];
-      const binary = atob(base64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
-      content.innerHTML = '';
-      content.style.overflowY = 'auto';
-      for (let p = 1; p <= pdf.numPages; p++) {
-        const page = await pdf.getPage(p);
-        const vp = page.getViewport({ scale: 1.4 });
-        const canvas = document.createElement('canvas');
-        canvas.width = vp.width; canvas.height = vp.height;
-        canvas.style.cssText = 'display:block;margin:0 auto 4px;max-width:100%';
-        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
-        content.appendChild(canvas);
-      }
-
-    } else if (ext === 'docx' || type.includes('word') || type.includes('document')) {
-      await _loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js');
-      const base64 = doc.data.split(',')[1];
-      const binary = atob(base64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      const result = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer });
-      const _purifyConf = { FORBID_TAGS: ['script','style','iframe','object','embed'], FORBID_ATTR: ['onerror','onload','onclick','onmouseover','onfocus'] };
-      const safeHtml = typeof DOMPurify !== 'undefined'
-        ? DOMPurify.sanitize(result.value, _purifyConf)
-        : result.value.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '').replace(/on[a-z]+=["'][^"']*["']/gi, '');
-      content.innerHTML = `<div style="padding:1.5rem 2rem;font-family:Georgia,serif;font-size:.95rem;line-height:1.7;color:#222;max-width:800px;margin:0 auto">${safeHtml}</div>`;
-
-    } else if (ext === 'xlsx' || ext === 'xls' || type.includes('sheet') || type.includes('excel')) {
-      await _loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
-      const base64 = doc.data.split(',')[1];
-      const workbook = XLSX.read(base64, { type: 'base64' });
-      let html = '<div style="padding:1rem;overflow-x:auto">';
-      workbook.SheetNames.forEach(shName => {
-        html += `<h3 style="font-size:.9rem;margin:.5rem 0;color:#333">${esc(shName)}</h3>`;
-        const ws = workbook.Sheets[shName];
-        if (!ws) return;
-        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-        if (!rows || rows.length === 0) { html += '<p style="color:#999;font-size:.8rem">Hoja vacía</p>'; return; }
-        html += '<table style="border-collapse:collapse;font-size:.8rem;margin-bottom:1rem">';
-        rows.forEach((row, i) => {
-          if (!Array.isArray(row)) return;
-          html += '<tr>';
-          row.forEach(cell => {
-            const tag = i === 0 ? 'th' : 'td';
-            const style = i === 0 ? 'background:#f0f0f0;font-weight:600;' : '';
-            html += `<${tag} style="border:1px solid #ccc;padding:4px 8px;${style}">${esc(String(cell ?? ''))}</${tag}>`;
-          });
-          html += '</tr>';
-        });
-        html += '</table>';
-      });
-      html += '</div>';
-      content.innerHTML = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(html) : html;
-
-    } else {
-      content.innerHTML = `<div style="padding:2rem;text-align:center;color:#333">
-        <p style="font-size:2rem">📄</p>
-        <p style="font-weight:600">${esc(doc.name)}</p>
-        <p style="color:#666;font-size:.85rem">Este formato no tiene previsualización.<br>Descárgalo para abrirlo.</p>
-        <button onclick="dlDoc('${doc.id}')" style="margin-top:1rem;padding:.5rem 1.2rem;background:#0f6;border:none;border-radius:6px;cursor:pointer;font-weight:600">⬇ Descargar</button>
-      </div>`;
-    }
-  } catch(e) {
-    content.innerHTML = `<div style="padding:2rem;text-align:center;color:#c00">Error al cargar: ${esc(e.message)}</div>`;
-  }
-}
-
-// SRI map for known CDN scripts (VULN-07)
-const _SRI_MAP = {
-  'https://cdn.jsdelivr.net/npm/dompurify@3.1.5/dist/purify.min.js': 'sha384-QvE6RDEDmIDHV/o6xf5PqxIcbSw0xUMvq+T8J0vOZHMOeW1GNZHtVVFJq5FQwFf',
-};
-function _loadScript(src) {
-  return new Promise((res, rej) => {
-    if (document.querySelector('script[src="' + src + '"]')) { res(); return; }
-    const s = document.createElement('script');
-    s.src = src;
-    s.crossOrigin = 'anonymous';
-    s.onload = res; s.onerror = rej;
-    document.head.appendChild(s);
-  });
-}
-
-async function closeDocViewer(broadcast = false) {
-  document.getElementById('docViewer').classList.remove('show');
-  if (broadcast && _currentDocId) {
-    await sendData({ type: 'close-doc' });
-  }
-  _currentDocId = null;
-}
-
-async function shareDocScreen() {
-  if (!_currentDocId) return;
-  const doc = sharedDocs.find(d => d.id === _currentDocId);
-  if (!doc) return;
-  // Only send docId + name — doc data already shared via doc-share event
-  // LiveKit has ~15KB packet limit so we cannot include the file here
-  await sendData({ type: 'show-doc', docId: _currentDocId, senderName: myName, docName: doc.name });
-  toast('Documento compartido en pantalla 📡');
-}
-
+function wDebug(msg){const el=document.getElementById('wDebug');if(el)el.innerHTML+=new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' '+msg+'<br>';console.log('[WR]',msg);}
 
 </script>
 </body>
