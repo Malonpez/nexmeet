@@ -2183,7 +2183,7 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 function startTimer(){meetSecs=0;timerInt=setInterval(()=>{meetSecs++;const m=String(Math.floor(meetSecs/60)).padStart(2,'0');const s=String(meetSecs%60).padStart(2,'0');document.getElementById('mTimer').textContent=`${m}:${s}`;},1000);}
 function esc(s){return String(s).replace(/[&]/g,function(){return String.fromCharCode(38)+'amp;';}).replace(/[<]/g,function(){return String.fromCharCode(38)+'lt;';}).replace(/[>]/g,function(){return String.fromCharCode(38)+'gt;';});}
 function dl(content,filename,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mime}));a.download=filename;a.click();}
-function wDebug(msg){const el=document.getElementById('wDebug');if(el){const d=document.createElement('div');d.textContent=new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' '+String(msg).slice(0,200);el.appendChild(d);}})+' '+msg+'<br>';console.log('[WR]',msg);}
+function wDebug(msg){try{const el=document.getElementById('wDebug');if(el){const d=document.createElement('div');d.textContent=String(msg).slice(0,200);el.appendChild(d);}}catch(e){}}
 
 
 async function muteAll() {
