@@ -1,7 +1,7 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8"><!-- b1 -->
+<meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' wss://meet.newinteriorsolutions.com.au https://meet.newinteriorsolutions.com.au https://api.groq.com; media-src 'self' blob: mediastream:; img-src 'self' data: blob:; worker-src blob:; frame-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests; object-src 'none';">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="X-Frame-Options" content="DENY">
@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="NexMeet">
 <meta name="theme-color" content="#0d0f14">
 <link rel="manifest" href="manifest.json">
-<title>NexMeet â€” Video Conferencias Privadas</title>
+<title>NexMeet — Video Conferencias Privadas</title>
 <script>
 // LiveKit SDK loader with fallbacks
 (function(){
@@ -25,7 +25,7 @@
   var idx = 0;
   function tryNext() {
     if (idx >= cdns.length) {
-      document.getElementById('lStatus').textContent = 'Error: No se pudo cargar el SDK de video. Recarga la pÃ¡gina.';
+      document.getElementById('lStatus').textContent = 'Error: No se pudo cargar el SDK de video. Recarga la página.';
       document.getElementById('lStatus').className = 'err';
       return;
     }
@@ -41,7 +41,7 @@
   tryNext();
 })();
 
-// â”€â”€ VIDEO/AUDIO E2E â€” Insertable Streams â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── VIDEO/AUDIO E2E — Insertable Streams ──────────────────
 let _e2eeSupported = false;
 
 function checkInsertableStreams() {
@@ -115,21 +115,21 @@ function updateE2EEBadge() {
   if (!badge) return;
   if (_e2eeCryptoKey && _e2eeSupported) {
     // H3 FIX: full E2EE confirmed active (Insertable Streams working)
-    badge.textContent = 'ðŸ” E2E Completo';
+    badge.textContent = '🔐 E2E Completo';
     badge.style.background = 'rgba(0,229,195,.15)';
     badge.style.color = '#00e5c3';
     badge.title = 'Video + audio + datos cifrados E2E (AES-256-GCM). Clave solo en tu navegador. Chrome/Edge moderno requerido.';
   } else if (_e2eeCryptoKey) {
-    // H3 FIX: honest â€” this browser only has TLS for video, E2E only for data messages
-    badge.textContent = 'ðŸ”’ Datos E2E Â· Video TLS';
+    // H3 FIX: honest — this browser only has TLS for video, E2E only for data messages
+    badge.textContent = '🔒 Datos E2E · Video TLS';
     badge.style.background = 'rgba(255,193,7,.12)';
     badge.style.color = '#ffc107';
-    badge.title = 'Mensajes y archivos cifrados E2E. Video/audio solo TLS (sin E2E completo en este navegador â€” usa Chrome para E2E total).';
+    badge.title = 'Mensajes y archivos cifrados E2E. Video/audio solo TLS (sin E2E completo en este navegador — usa Chrome para E2E total).';
   } else {
-    badge.textContent = 'ðŸ”’ TLS';
+    badge.textContent = '🔒 TLS';
     badge.style.background = 'rgba(255,255,255,.05)';
     badge.style.color = 'var(--muted)';
-    badge.title = 'ConexiÃ³n cifrada por TLS. Sin clave E2EE activa en esta sesiÃ³n.';
+    badge.title = 'Conexión cifrada por TLS. Sin clave E2EE activa en esta sesión.';
   }
 }
 
@@ -451,7 +451,7 @@ html,body{height:100%;height:100dvh;font-family:'DM Sans',sans-serif;background:
 body.is-host .host-only { display: flex; }
 
 
-/* â”€â”€ INTRO â”€â”€ */
+/* ── INTRO ── */
 #intro{position:fixed;inset:0;z-index:9999;background:#0d0f14;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:opacity .7s ease;}
 .intro-logo{font-family:'Syne',sans-serif;font-size:clamp(2.8rem,10vw,5rem);font-weight:800;color:#fff;letter-spacing:-2px;}
 .intro-logo span{color:#00e5c3;}
@@ -471,29 +471,29 @@ body.is-host .host-only { display: flex; }
 <body>
 
 <!-- SPECIAL SCREENS -->
-<div id="expiredScreen"><div style="font-size:3.5rem">â°</div><h2 style="font-family:Syne,sans-serif;color:var(--danger)">Link expirado</h2><p style="color:var(--muted)">Solicita un nuevo link al organizador.</p></div>
-<div id="waitingRoom"><div class="wspin"></div><h2 style="font-family:Syne,sans-serif">Sala de espera</h2><p style="color:var(--muted)">El organizador te admitirÃ¡ en breve.</p><div class="wbadge" id="wNameBadge"></div></div>
-<div id="rejectedScreen"><div style="font-size:3.5rem">ðŸš«</div><h2 style="font-family:Syne,sans-serif;color:var(--danger)">Acceso denegado</h2><p style="color:var(--muted)">El organizador no admitiÃ³ tu ingreso.</p></div>
+<div id="expiredScreen"><div style="font-size:3.5rem">⏰</div><h2 style="font-family:Syne,sans-serif;color:var(--danger)">Link expirado</h2><p style="color:var(--muted)">Solicita un nuevo link al organizador.</p></div>
+<div id="waitingRoom"><div class="wspin"></div><h2 style="font-family:Syne,sans-serif">Sala de espera</h2><p style="color:var(--muted)">El organizador te admitirá en breve.</p><div class="wbadge" id="wNameBadge"></div></div>
+<div id="rejectedScreen"><div style="font-size:3.5rem">🚫</div><h2 style="font-family:Syne,sans-serif;color:var(--danger)">Acceso denegado</h2><p style="color:var(--muted)">El organizador no admitió tu ingreso.</p></div>
 
 <!-- LOBBY -->
 <div id="intro" onclick="skipIntro()">
   <div class="intro-logo">Nex<span>Meet</span></div>
-  <div class="intro-tag">Privado por diseÃ±o. Seguro por defecto.</div>
+  <div class="intro-tag">Privado por diseño. Seguro por defecto.</div>
 </div>
 
 <div id="lobby">
   <div class="logo">Nex<span>Meet</span></div>
-  <div class="tagline">Privado por diseÃ±o. Seguro por defecto.</div>
+  <div class="tagline">Privado por diseño. Seguro por defecto.</div>
   <div class="lcard">
     <div class="inv-banner" id="invBanner">
-      <div style="font-size:1.4rem">ðŸ”—</div>
-      <div style="font-size:.83rem;color:var(--muted);line-height:1.5">Fuiste invitado a una reuniÃ³n.<br>Ingresa tu nombre para solicitar acceso.<br><strong id="invExpiry" style="color:var(--accent)"></strong></div>
+      <div style="font-size:1.4rem">🔗</div>
+      <div style="font-size:.83rem;color:var(--muted);line-height:1.5">Fuiste invitado a una reunión.<br>Ingresa tu nombre para solicitar acceso.<br><strong id="invExpiry" style="color:var(--accent)"></strong></div>
     </div>
     <h2 id="lTitle">Crear o unirse a una sala</h2>
-    <div class="field"><label>Tu nombre</label><input id="nameInput" placeholder="Â¿CÃ³mo te llaman?" maxlength="30"/></div>
-    <button class="btn btn-b" id="btnMain" onclick="mainAction()"><span id="btnTxt">â–¶ Solicitar acceso</span></button>
-    <div id="createSec"><div class="divider">o crea una sala nueva</div><button class="btn btn-g" onclick="createRoom()">ï¼‹ Nueva sala</button></div>
-    <div id="manualSec" style="display:none"><div class="divider">o ingresa un ID</div><div class="jrow"><input id="roomCodeInput" placeholder="ID de salaâ€¦"/><button class="btn" onclick="joinManual()">Entrar</button></div></div>
+    <div class="field"><label>Tu nombre</label><input id="nameInput" placeholder="¿Cómo te llaman?" maxlength="30"/></div>
+    <button class="btn btn-b" id="btnMain" onclick="mainAction()"><span id="btnTxt">▶ Solicitar acceso</span></button>
+    <div id="createSec"><div class="divider">o crea una sala nueva</div><button class="btn btn-g" onclick="createRoom()">＋ Nueva sala</button></div>
+    <div id="manualSec" style="display:none"><div class="divider">o ingresa un ID</div><div class="jrow"><input id="roomCodeInput" placeholder="ID de sala…"/><button class="btn" onclick="joinManual()">Entrar</button></div></div>
     <div id="lStatus">Listo. Ingresa tu nombre para comenzar.</div>
   </div>
 </div>
@@ -504,9 +504,9 @@ body.is-host .host-only { display: flex; }
   <div id="handAlerts"></div>
   <div class="tbar">
     <div class="tbrand">Nex<span>Meet</span></div>
-    <div class="rbadge"><span>Sala:</span><strong id="dispRoom">â€¦</strong><button class="cbtn" onclick="copyInviteLink()">âŽ˜ Invitar</button></div>
-    <div class="enc-badge">ðŸ”’ E2E Â· LiveKit SFU</div>
-    <div class="lock-badge" id="lockBadge">ðŸ”’ Sala bloqueada</div>
+    <div class="rbadge"><span>Sala:</span><strong id="dispRoom">…</strong><button class="cbtn" onclick="copyInviteLink()">⎘ Invitar</button></div>
+    <div class="enc-badge">🔒 E2E · LiveKit SFU</div>
+    <div class="lock-badge" id="lockBadge">🔒 Sala bloqueada</div>
     <div class="rec-ind" id="recInd"><span class="recdot"></span> REC</div>
     <div class="spacer"></div>
     <div class="pc"><span class="dlive"></span><span id="pCount">1</span> participante(s)</div>
@@ -517,23 +517,23 @@ body.is-host .host-only { display: flex; }
     <div class="varea" id="varea">
       <div class="vgrid grid-1" id="vGrid"></div>
       <div class="wov" id="wov">
-        <h3>Sala lista â€” esperando participantes ðŸŽ‰</h3>
+        <h3>Sala lista — esperando participantes 🎉</h3>
         <div class="sbox">
-          <p>Genera un link de invitaciÃ³n con expiraciÃ³n:</p>
-          <div class="erow"><label>â± VÃ¡lido por:</label>
+          <p>Genera un link de invitación con expiración:</p>
+          <div class="erow"><label>⏱ Válido por:</label>
             <select id="expirySelect" onchange="regenLink()">
               <option value="3600000">1 hora</option>
               <option value="28800000" selected>8 horas</option>
               <option value="86400000">24 horas</option>
-              <option value="604800000">7 dÃ­as</option>
+              <option value="604800000">7 días</option>
             </select>
           </div>
-          <a class="slink" id="shareLink" href="#" target="_blank" onclick="openInvLink(event)">â€¦</a>
+          <a class="slink" id="shareLink" href="#" target="_blank" onclick="openInvLink(event)">…</a>
           <div id="expiryBadge" style="font-size:.72rem;color:var(--warn);margin-bottom:.7rem"></div>
           <div class="sacts">
-            <button class="btn btn-g" onclick="copyInviteLink()">ðŸ“‹ Copiar link</button>
-            <button class="btn btn-b" onclick="openInvLink()">â†— Abrir</button>
-            <button class="btn btn-s" onclick="regenLink()">ðŸ”„ Nuevo</button>
+            <button class="btn btn-g" onclick="copyInviteLink()">📋 Copiar link</button>
+            <button class="btn btn-b" onclick="openInvLink()">↗ Abrir</button>
+            <button class="btn btn-s" onclick="regenLink()">🔄 Nuevo</button>
           </div>
         </div>
         <div id="agendaViewWov" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;max-width:450px;width:90%;font-size:.85rem;line-height:1.65;color:var(--text);white-space:pre-wrap;max-height:160px;overflow-y:auto"></div>
@@ -543,12 +543,12 @@ body.is-host .host-only { display: flex; }
     <!-- CHAT PANEL -->
     <div class="panel" id="chatPanel">
       <div class="pin">
-        <div class="ph">ðŸ’¬ Chat<button class="pclose" onclick="togglePanel('chat')">âœ•</button></div>
+        <div class="ph">💬 Chat<button class="pclose" onclick="togglePanel('chat')">✕</button></div>
         <div class="cmsgs" id="chatMsgs"></div>
         <div class="cctrl">
           <div class="cto"><label>Para:</label><select id="chatTo"><option value="">Todos</option></select></div>
           <div class="crow">
-            <input id="chatInput" placeholder="Mensajeâ€¦" onkeydown="if(event.key==='Enter')sendChat()"/>
+            <input id="chatInput" placeholder="Mensaje…" onkeydown="if(event.key==='Enter')sendChat()"/>
             <button class="csend" onclick="sendChat()"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
           </div>
         </div>
@@ -558,11 +558,11 @@ body.is-host .host-only { display: flex; }
     <!-- DOCS PANEL -->
     <div class="panel" id="docsPanel">
       <div class="pin">
-        <div class="ph">ðŸ“ Documentos<button class="pclose" onclick="togglePanel('docs')">âœ•</button></div>
+        <div class="ph">📁 Documentos<button class="pclose" onclick="togglePanel('docs')">✕</button></div>
         <div class="dlist" id="docsList"><div class="dempty" id="docsEmpty">No hay archivos compartidos.</div></div>
         <div class="dup">
           <input type="file" id="fileInput" style="display:none" multiple onchange="uploadFiles(this)"/>
-          <button class="ubtn" onclick="document.getElementById('fileInput').click()">ðŸ“Ž Subir archivo (mÃ¡x 5MB)</button>
+          <button class="ubtn" onclick="document.getElementById('fileInput').click()">📎 Subir archivo (máx 5MB)</button>
         </div>
       </div>
     </div>
@@ -570,10 +570,10 @@ body.is-host .host-only { display: flex; }
     <!-- NOTES PANEL -->
     <div class="panel" id="notesPanel">
       <div class="pin">
-        <div class="ph">ðŸ“ Notas<button class="pclose" onclick="togglePanel('notes')">âœ•</button></div>
+        <div class="ph">📝 Notas<button class="pclose" onclick="togglePanel('notes')">✕</button></div>
         <div class="ntarea">
-          <textarea id="notesArea" placeholder="Notas compartidas en tiempo realâ€¦" oninput="syncNotes()"></textarea>
-          <div class="nt-foot"><span id="notesStat">Sin cambios</span><button onclick="exportNotes()">â¬‡ Exportar</button></div>
+          <textarea id="notesArea" placeholder="Notas compartidas en tiempo real…" oninput="syncNotes()"></textarea>
+          <div class="nt-foot"><span id="notesStat">Sin cambios</span><button onclick="exportNotes()">⬇ Exportar</button></div>
         </div>
       </div>
     </div>
@@ -581,52 +581,52 @@ body.is-host .host-only { display: flex; }
 
   <!-- CONTROLS -->
   <div class="cbar">
-    <button class="cc" id="ccMic" onclick="toggleMic()"><div class="ci">ðŸŽ¤</div><div class="cl">Micro</div></button>
-    <button class="cc" id="ccCam" onclick="toggleCam()"><div class="ci">ðŸ“·</div><div class="cl">CÃ¡mara</div></button>
-    <button class="cc" id="ccScreen" onclick="toggleScreen()"><div class="ci">ðŸ–¥ï¸</div><div class="cl">Pantalla</div></button>
-    <button class="cc" id="ccHand" onclick="toggleHand()"><div class="ci">âœ‹</div><div class="cl">Mano</div></button>
-    <button class="cc host-only" id="ccMuteAll" onclick="muteAll()"><div class="ci">ðŸ”‡</div><div class="cl">Silenciar</div></button>
+    <button class="cc" id="ccMic" onclick="toggleMic()"><div class="ci">🎤</div><div class="cl">Micro</div></button>
+    <button class="cc" id="ccCam" onclick="toggleCam()"><div class="ci">📷</div><div class="cl">Cámara</div></button>
+    <button class="cc" id="ccScreen" onclick="toggleScreen()"><div class="ci">🖥️</div><div class="cl">Pantalla</div></button>
+    <button class="cc" id="ccHand" onclick="toggleHand()"><div class="ci">✋</div><div class="cl">Mano</div></button>
+    <button class="cc host-only" id="ccMuteAll" onclick="muteAll()"><div class="ci">🔇</div><div class="cl">Silenciar</div></button>
     <div class="cdiv"></div>
-    <button class="cc" id="ccChat" onclick="togglePanel('chat')"><div class="ci">ðŸ’¬</div><div class="cl">Chat <span class="badge" id="chatBadge" style="display:none">0</span></div></button>
-    <button class="cc" id="ccDocs" onclick="togglePanel('docs')"><div class="ci">ðŸ“</div><div class="cl">Archivos <span class="badge" id="docsBadge" style="display:none">0</span></div></button>
-    <button class="cc" id="ccNotes" onclick="togglePanel('notes')"><div class="ci">ðŸ“</div><div class="cl">Notas</div></button>
+    <button class="cc" id="ccChat" onclick="togglePanel('chat')"><div class="ci">💬</div><div class="cl">Chat <span class="badge" id="chatBadge" style="display:none">0</span></div></button>
+    <button class="cc" id="ccDocs" onclick="togglePanel('docs')"><div class="ci">📁</div><div class="cl">Archivos <span class="badge" id="docsBadge" style="display:none">0</span></div></button>
+    <button class="cc" id="ccNotes" onclick="togglePanel('notes')"><div class="ci">📝</div><div class="cl">Notas</div></button>
     <div class="cdiv"></div>
     <div class="more-wrap" id="moreWrap">
-      <button class="cc" onclick="toggleMore()"><div class="ci">â‹¯</div><div class="cl">MÃ¡s</div></button>
+      <button class="cc" onclick="toggleMore()"><div class="ci">⋯</div><div class="cl">Más</div></button>
       <div class="more-drop" id="moreDrop">
-        <button class="mdi" onclick="openWB()"><span class="mi">ðŸ–Šï¸</span> Pizarra</button>
-        <button class="mdi host-only" onclick="openPoll()"><span class="mi">ðŸ“Š</span> Encuesta</button>
-        <button class="mdi host-only" onclick="openAgenda()"><span class="mi">ðŸ“‹</span> Agenda</button>
-        <button class="mdi host-only" onclick="toggleRec()"><span class="mi" id="recIcon">âº</span> <span id="recTxt">Grabar</span></button>
-        <button class="mdi" onclick="sendReaction('ðŸ‘')"><span class="mi">ðŸ‘</span> ReacciÃ³n</button>
-        <button class="mdi" onclick="sendReaction('â¤ï¸')"><span class="mi">â¤ï¸</span> ReacciÃ³n</button>
-        <button class="mdi" onclick="sendReaction('ðŸ˜‚')"><span class="mi">ðŸ˜‚</span> ReacciÃ³n</button>
-        <button class="mdi" onclick="sendReaction('ðŸ‘')"><span class="mi">ðŸ‘</span> ReacciÃ³n</button>
-        <button class="mdi host-only" onclick="openAI()"><span class="mi">ðŸ¤–</span> AnÃ¡lisis IA</button>
-        <button class="mdi host-only" onclick="exportChat()"><span class="mi">ðŸ’¾</span> Exportar chat</button>
-        <button class="mdi" onclick="toggleTheme()"><span class="mi" id="themeIcon">â˜€ï¸</span> <span id="themeTxt">Modo claro</span></button>
-        <button class="mdi dk host-only" onclick="toggleLock()"><span class="mi">ðŸ”’</span> <span id="lockTxt">Bloquear sala</span></button>
+        <button class="mdi" onclick="openWB()"><span class="mi">🖊️</span> Pizarra</button>
+        <button class="mdi host-only" onclick="openPoll()"><span class="mi">📊</span> Encuesta</button>
+        <button class="mdi host-only" onclick="openAgenda()"><span class="mi">📋</span> Agenda</button>
+        <button class="mdi host-only" onclick="toggleRec()"><span class="mi" id="recIcon">⏺</span> <span id="recTxt">Grabar</span></button>
+        <button class="mdi" onclick="sendReaction('👍')"><span class="mi">👍</span> Reacción</button>
+        <button class="mdi" onclick="sendReaction('❤️')"><span class="mi">❤️</span> Reacción</button>
+        <button class="mdi" onclick="sendReaction('😂')"><span class="mi">😂</span> Reacción</button>
+        <button class="mdi" onclick="sendReaction('👏')"><span class="mi">👏</span> Reacción</button>
+        <button class="mdi host-only" onclick="openAI()"><span class="mi">🤖</span> Análisis IA</button>
+        <button class="mdi host-only" onclick="exportChat()"><span class="mi">💾</span> Exportar chat</button>
+        <button class="mdi" onclick="toggleTheme()"><span class="mi" id="themeIcon">☀️</span> <span id="themeTxt">Modo claro</span></button>
+        <button class="mdi dk host-only" onclick="toggleLock()"><span class="mi">🔒</span> <span id="lockTxt">Bloquear sala</span></button>
       </div>
     </div>
     <div class="cdiv"></div>
-    <button class="lbtn" onclick="leaveRoom()">ðŸ“ž Salir</button>
+    <button class="lbtn" onclick="leaveRoom()">📞 Salir</button>
   </div>
 </div>
 
 <!-- WHITEBOARD -->
 <div id="wbOverlay">
   <div class="wb-hdr">
-    <h3>ðŸ–Šï¸ Pizarra colaborativa</h3>
+    <h3>🖊️ Pizarra colaborativa</h3>
     <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
-      <button class="wbt on" id="wbPen" onclick="setWbTool('pen')">âœï¸ LÃ¡piz</button>
-      <button class="wbt" id="wbErase" onclick="setWbTool('eraser')">ðŸ§¹ Borrador</button>
+      <button class="wbt on" id="wbPen" onclick="setWbTool('pen')">✏️ Lápiz</button>
+      <button class="wbt" id="wbErase" onclick="setWbTool('eraser')">🧹 Borrador</button>
       <input type="color" id="wbColor" value="#00e5c3" style="width:28px;height:28px;border:none;border-radius:6px;cursor:pointer;padding:2px;"/>
       <input type="range" id="wbSize" min="1" max="30" value="3" style="width:80px;"/>
-      <button class="wbt" onclick="clearWB()">ðŸ—‘ Limpiar</button>
-      <button class="wbt" onclick="downloadWB()">â¬‡ Descargar</button>
+      <button class="wbt" onclick="clearWB()">🗑 Limpiar</button>
+      <button class="wbt" onclick="downloadWB()">⬇ Descargar</button>
     </div>
     <div style="flex:1"></div>
-    <button class="wbt" onclick="closeWB()">âœ• Cerrar</button>
+    <button class="wbt" onclick="closeWB()">✕ Cerrar</button>
   </div>
   <canvas id="wbCanvas"></canvas>
 </div>
@@ -634,16 +634,16 @@ body.is-host .host-only { display: flex; }
 <!-- POLLS -->
 <div id="pollOverlay">
   <div class="poll-box">
-    <h3 id="pollTitle">ðŸ“Š Nueva encuesta</h3>
+    <h3 id="pollTitle">📊 Nueva encuesta</h3>
     <div id="pollCreate">
-      <input class="poll-q-input" id="pollQ" placeholder="Â¿CuÃ¡l es tu pregunta?"/>
+      <input class="poll-q-input" id="pollQ" placeholder="¿Cuál es tu pregunta?"/>
       <div id="pollOpts">
-        <div class="poll-opt-row"><input placeholder="OpciÃ³n 1"/></div>
-        <div class="poll-opt-row"><input placeholder="OpciÃ³n 2"/></div>
+        <div class="poll-opt-row"><input placeholder="Opción 1"/></div>
+        <div class="poll-opt-row"><input placeholder="Opción 2"/></div>
       </div>
       <div style="display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap">
-        <button class="btn btn-s" onclick="addPollOpt()" style="width:auto;margin-top:0">ï¼‹ OpciÃ³n</button>
-        <button class="btn btn-g" onclick="launchPoll()" style="width:auto;margin-top:0">ðŸš€ Lanzar</button>
+        <button class="btn btn-s" onclick="addPollOpt()" style="width:auto;margin-top:0">＋ Opción</button>
+        <button class="btn btn-g" onclick="launchPoll()" style="width:auto;margin-top:0">🚀 Lanzar</button>
         <button class="btn btn-s" onclick="closePoll()" style="width:auto;margin-top:0">Cancelar</button>
       </div>
     </div>
@@ -655,10 +655,10 @@ body.is-host .host-only { display: flex; }
 <!-- AGENDA -->
 <div id="agendaOverlay">
   <div class="ag-box">
-    <h3>ðŸ“‹ Agenda de la reuniÃ³n</h3>
-    <textarea id="agendaInput" placeholder="Escribe los puntos de la agendaâ€¦"></textarea>
+    <h3>📋 Agenda de la reunión</h3>
+    <textarea id="agendaInput" placeholder="Escribe los puntos de la agenda…"></textarea>
     <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-      <button class="btn btn-g" onclick="saveAgenda()" style="width:auto;margin-top:0">ðŸ’¾ Guardar y compartir</button>
+      <button class="btn btn-g" onclick="saveAgenda()" style="width:auto;margin-top:0">💾 Guardar y compartir</button>
       <button class="btn btn-s" onclick="closeAgenda()" style="width:auto;margin-top:0">Cerrar</button>
     </div>
   </div>
@@ -668,35 +668,35 @@ body.is-host .host-only { display: flex; }
 <div id="aiOverlay">
   <div class="ai-box">
     <div class="ai-hdr">
-      <h3>ðŸ¤– AnÃ¡lisis IA â€” Reporte Gerencial</h3>
-      <span class="ai-badge">LLaMA 3.3 70B Â· Groq</span>
-      <button onclick="closeAI()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;margin-left:.5rem">âœ•</button>
+      <h3>🤖 Análisis IA — Reporte Gerencial</h3>
+      <span class="ai-badge">LLaMA 3.3 70B · Groq</span>
+      <button onclick="closeAI()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;margin-left:.5rem">✕</button>
     </div>
     <div class="ai-body">
       <div class="ai-key-row">
-        <label>ðŸ”‘ Groq API Key:</label>
-        <input class="ai-key-inp" id="groqKeyInput" type="password" placeholder="gsk_â€¦"/>
+        <label>🔑 Groq API Key:</label>
+        <input class="ai-key-inp" id="groqKeyInput" type="password" placeholder="gsk_…"/>
         <button class="ai-key-save" onclick="saveGroqKey()">Guardar</button>
       </div>
-      <div class="ai-key-ok" id="aiKeyOk">âœ“ API Key configurada</div>
-      <div style="font-size:.72rem;color:var(--muted);margin-bottom:1rem;line-height:1.5">ObtÃ©n una gratis en <a href="https://console.groq.com" target="_blank" style="color:var(--accent)">console.groq.com</a> â†’ API Keys â†’ Create.</div>
-      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.6rem;font-weight:500">Tipo de anÃ¡lisis:</div>
+      <div class="ai-key-ok" id="aiKeyOk">✓ API Key configurada</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:1rem;line-height:1.5">Obtén una gratis en <a href="https://console.groq.com" target="_blank" style="color:var(--accent)">console.groq.com</a> → API Keys → Create.</div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.6rem;font-weight:500">Tipo de análisis:</div>
       <div class="ai-options">
-        <div class="ai-opt-card selected" id="aiopt-0" onclick="selectAIOpt(0)"><div class="aoc-icon">ðŸ“Š</div><div class="aoc-title">Reporte Gerencial</div><div class="aoc-desc">Decisiones, compromisos, prÃ³ximos pasos</div></div>
-        <div class="ai-opt-card" id="aiopt-1" onclick="selectAIOpt(1)"><div class="aoc-icon">ðŸ“‹</div><div class="aoc-title">Minuta Ejecutiva</div><div class="aoc-desc">Formato formal con responsables</div></div>
-        <div class="ai-opt-card" id="aiopt-2" onclick="selectAIOpt(2)"><div class="aoc-icon">âš¡</div><div class="aoc-title">Resumen RÃ¡pido</div><div class="aoc-desc">Bullets para WhatsApp</div></div>
-        <div class="ai-opt-card" id="aiopt-3" onclick="selectAIOpt(3)"><div class="aoc-icon">ðŸŽ¯</div><div class="aoc-title">Action Items</div><div class="aoc-desc">Solo tareas y responsables</div></div>
+        <div class="ai-opt-card selected" id="aiopt-0" onclick="selectAIOpt(0)"><div class="aoc-icon">📊</div><div class="aoc-title">Reporte Gerencial</div><div class="aoc-desc">Decisiones, compromisos, próximos pasos</div></div>
+        <div class="ai-opt-card" id="aiopt-1" onclick="selectAIOpt(1)"><div class="aoc-icon">📋</div><div class="aoc-title">Minuta Ejecutiva</div><div class="aoc-desc">Formato formal con responsables</div></div>
+        <div class="ai-opt-card" id="aiopt-2" onclick="selectAIOpt(2)"><div class="aoc-icon">⚡</div><div class="aoc-title">Resumen Rápido</div><div class="aoc-desc">Bullets para WhatsApp</div></div>
+        <div class="ai-opt-card" id="aiopt-3" onclick="selectAIOpt(3)"><div class="aoc-icon">🎯</div><div class="aoc-title">Action Items</div><div class="aoc-desc">Solo tareas y responsables</div></div>
       </div>
-      <button class="ai-gen-btn" id="aiGenBtn" onclick="generateReport()">âœ¨ Generar anÃ¡lisis con IA</button>
-      <div class="ai-progress" id="aiProgress"><div class="ai-spinner"></div><p>Analizando la reuniÃ³nâ€¦</p><div class="ai-prog-step" id="aiProgStep">Preparando datosâ€¦</div></div>
+      <button class="ai-gen-btn" id="aiGenBtn" onclick="generateReport()">✨ Generar análisis con IA</button>
+      <div class="ai-progress" id="aiProgress"><div class="ai-spinner"></div><p>Analizando la reunión…</p><div class="ai-prog-step" id="aiProgStep">Preparando datos…</div></div>
       <div class="ai-report" id="aiReport"></div>
       <div class="ai-report-actions" id="aiReportActions" style="display:none">
-        <button class="btn btn-g" onclick="copyReport()">ðŸ“‹ Copiar</button>
-        <button class="btn btn-s" onclick="downloadReport()">â¬‡ Descargar</button>
-        <button class="btn btn-s" onclick="resetAIReport()">ðŸ”„ Nuevo</button>
+        <button class="btn btn-g" onclick="copyReport()">📋 Copiar</button>
+        <button class="btn btn-s" onclick="downloadReport()">⬇ Descargar</button>
+        <button class="btn btn-s" onclick="resetAIReport()">🔄 Nuevo</button>
       </div>
     </div>
-    <div class="ai-footer"><span>Los datos se procesan via Groq â€” no se almacenan</span><span class="ai-model-badge">llama-3.3-70b-versatile</span></div>
+    <div class="ai-footer"><span>Los datos se procesan via Groq — no se almacenan</span><span class="ai-model-badge">llama-3.3-70b-versatile</span></div>
   </div>
 </div>
 
@@ -705,27 +705,27 @@ body.is-host .host-only { display: flex; }
 <!-- DOC VIEWER -->
 <div id="docViewer">
   <div id="docViewerBar">
-    <span id="docViewerName">â€”</span>
-    <button class="btn btn-s" style="width:auto;font-size:.78rem" onclick="shareDocScreen()">ðŸ“¡ Compartir en sala</button>
-    <button class="btn btn-s" style="width:auto;font-size:.78rem" onclick="closeDocViewer(true)">âœ• Cerrar para todos</button>
+    <span id="docViewerName">—</span>
+    <button class="btn btn-s" style="width:auto;font-size:.78rem" onclick="shareDocScreen()">📡 Compartir en sala</button>
+    <button class="btn btn-s" style="width:auto;font-size:.78rem" onclick="closeDocViewer(true)">✕ Cerrar para todos</button>
   </div>
   <iframe id="docViewerFrame" sandbox="allow-scripts allow-same-origin" style="width:88vw;height:82vh;border:none;border-radius:8px;background:#fff;display:none"></iframe>
   <div id="docViewerContent" style="max-width:92vw;max-height:85vh;border-radius:10px;overflow:auto;background:#fff;"></div>
 </div>
 
-<div id="recNotif">âº Grabandoâ€¦</div>
+<div id="recNotif">⏺ Grabando…</div>
 <div class="toast" id="toast"></div>
 <script>
 
-// â•â• UTILS â•â•
+// ══ UTILS ══
 function hide(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
 function show(id) { const el = document.getElementById(id); if (el) el.style.display = 'flex'; }
 
-// â•â• CONFIG â•â•
+// ══ CONFIG ══
 const TOKEN_SERVER = 'https://meet.newinteriorsolutions.com.au';
 const LK_URL = 'wss://meet.newinteriorsolutions.com.au';
 
-// â•â• STATE â•â•
+// ══ STATE ══
 let room = null;
 let myName = '', roomId = '', isHost = false;
 let isMuted = false, isVideoOff = false, isScreenSharing = false, handRaised = false;
@@ -740,10 +740,10 @@ let agendaText = '';
 let pollData = null, myVote = null;
 let aiOptSelected = 0, lastReportText = '';
 
-// Pending knock queue (for host) â€” identity â†’ {resolve}
+// Pending knock queue (for host) — identity → {resolve}
 const pendingKnocks = new Map();
 
-// â•â• URL HELPERS â•â•
+// ══ URL HELPERS ══
 function parseHash() {
   const raw = decodeURIComponent(location.hash.replace('#','').trim());
   if (!raw) return null;
@@ -755,7 +755,7 @@ function parseHash() {
     e2eeKey: parts[2] || null,
     pubKey:  parts[3] || null
   };
-  // H2 FIX: clear hash from URL after parsing â€” don't leave E2EE key in browser history
+  // H2 FIX: clear hash from URL after parsing — don't leave E2EE key in browser history
   if (history.replaceState) {
     history.replaceState(null, '', location.pathname + location.search);
   }
@@ -770,12 +770,12 @@ function buildLink(rid, ms) {
   let hash = rid + '|' + (Date.now() + ms);
   if (e2eeKey) hash += '|' + e2eeKey;
   if (pubKey)  hash += '|' + pubKey;
-  // H2 NOTE: link contains E2EE key in fragment â€” treat as sensitive
+  // H2 NOTE: link contains E2EE key in fragment — treat as sensitive
   // Fragment never goes to server, but is visible to browser extensions
   return base + '#' + hash;
 }
 
-// â”€â”€ E2EE Key management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── E2EE Key management ──────────────────
 let _e2eeCryptoKey = null;
 window._e2eeKeyB64 = '';
 
@@ -825,10 +825,10 @@ function fmtExpiry(ms) {
   const m = Math.round(ms / 60000);
   if (m < 60) return m + 'min';
   const h = Math.round(m / 60);
-  return h < 24 ? h + 'h' : Math.round(h/24) + 'dÃ­as';
+  return h < 24 ? h + 'h' : Math.round(h/24) + 'días';
 }
 
-// â•â• INIT â•â•
+// ══ INIT ══
 function skipIntro() {
   try {
     const intro = document.getElementById('intro');
@@ -836,7 +836,7 @@ function skipIntro() {
     if (intro) { intro.style.opacity = '0'; setTimeout(() => { intro.style.display = 'none'; }, 700); }
     if (lobby) { lobby.style.visibility = ''; lobby.style.opacity = '1'; }
   } catch(e) {
-    // Fallback â€” make everything visible
+    // Fallback — make everything visible
     document.querySelectorAll('#intro,#lobby').forEach(el => { if(el){ el.style.display = el.id==='intro'?'none':''; el.style.visibility=''; el.style.opacity='1'; }});
   }
 }
@@ -851,13 +851,13 @@ window.onload = () => {
   if (parsed) {
     if (Date.now() > parsed.expiry) { show('expiredScreen'); return; }
     document.getElementById('invBanner').classList.add('show');
-    document.getElementById('invExpiry').textContent = 'â± Expira en ' + fmtExpiry(parsed.expiry - Date.now());
-    document.getElementById('lTitle').textContent = 'Unirse a la reuniÃ³n';
-    document.getElementById('btnTxt').textContent = 'â–¶ Solicitar acceso';
+    document.getElementById('invExpiry').textContent = '⏱ Expira en ' + fmtExpiry(parsed.expiry - Date.now());
+    document.getElementById('lTitle').textContent = 'Unirse a la reunión';
+    document.getElementById('btnTxt').textContent = '▶ Solicitar acceso';
     document.getElementById('createSec').style.display = 'none';
     document.getElementById('manualSec').style.display = 'none';
   } else {
-    document.getElementById('btnTxt').textContent = 'ï¼‹ Crear sala nueva';
+    document.getElementById('btnTxt').textContent = '＋ Crear sala nueva';
     document.getElementById('invBanner').style.display = 'none';
     document.getElementById('createSec').style.display = 'none';
     document.getElementById('btnMain').className = 'btn btn-g';
@@ -871,7 +871,7 @@ function setStatus(t, err=false) {
   el.textContent = t; el.className = err ? 'err' : '';
 }
 
-// â•â• LOBBY â•â•
+// ══ LOBBY ══
 function mainAction() {
   const parsed = parseHash();
   parsed ? joinWithParsed(parsed) : createRoom();
@@ -881,9 +881,9 @@ async function createRoom() {
   const name = document.getElementById('nameInput').value.trim();
   if (!name) { toast('Ingresa tu nombre'); return; }
   myName = name;
-  setStatus('Creando salaâ€¦');
+  setStatus('Creando sala…');
   try {
-    // C1 FIX: server creates room and returns hostProof â€” client never picks roomId
+    // C1 FIX: server creates room and returns hostProof — client never picks roomId
     const resp = await fetch(`${TOKEN_SERVER}/api/room/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -914,7 +914,7 @@ async function joinWithParsed(parsed) {
   if (parsed.expiry - Date.now() < 30000) { show('expiredScreen'); return; }
   myName = name; isHost = false; roomId = parsed.roomId;
   if (parsed.e2eeKey) await importE2EEKey(parsed.e2eeKey);
-  // FIX-CRÃTICO-3: import host's ECDSA pubkey for message verification
+  // FIX-CRÍTICO-3: import host's ECDSA pubkey for message verification
   if (parsed.pubKey) await importSigningKey(parsed.pubKey);
   hide('lobby');
   document.getElementById('wNameBadge').textContent = myName;
@@ -934,7 +934,7 @@ function joinManual() {
   joinLiveKit(roomId, myName, false);
 }
 
-// â•â• LIVEKIT JOIN â•â•
+// ══ LIVEKIT JOIN ══
 async function joinLiveKit(rid, name, host) {
   try {
     // C1 FIX: POST with hostProof for host, no hostProof for guest
@@ -991,14 +991,14 @@ async function joinLiveKit(rid, name, host) {
       setWov(true);
       setTimeout(() => { applyE2EEToRoom(); updateE2EEBadge(); }, 1000);
     } else {
-      // Guest does NOT publish camera/mic until admitted â€” only data channel
-      // Send knock â€” retry every 3s until admitted (host DataReceived may not be ready instantly)
+      // Guest does NOT publish camera/mic until admitted — only data channel
+      // Send knock — retry every 3s until admitted (host DataReceived may not be ready instantly)
       const enc = new TextEncoder();
       const knockMsg = enc.encode(JSON.stringify({ type: 'knock', name }));
       const sendKnock = async () => {
         try { await room.localParticipant.publishData(knockMsg, 0); } catch(e) {}
       };
-      // BLOQUE 2: knock con backoff â€” no bucle fijo cada 3s
+      // BLOQUE 2: knock con backoff — no bucle fijo cada 3s
       await sendKnock();
       let _knockAttempts = 0;
       window._knockInterval = setInterval(async () => {
@@ -1021,11 +1021,11 @@ async function joinLiveKit(rid, name, host) {
   }
 }
 
-// â•â• ROOM EVENTS â•â•
+// ══ ROOM EVENTS ══
 function setupRoomEvents() {
   room.on(LivekitClient.RoomEvent.ParticipantConnected, p => {
-    toast(esc(p.identity) + ' se uniÃ³');
-    addSys(esc(p.identity) + ' se uniÃ³ a la llamada');
+    toast(esc(p.identity) + ' se unió');
+    addSys(esc(p.identity) + ' se unió a la llamada');
     updatePC();
     updateChatSel();
     if (isHost) showKnock(p.sid, p.identity);
@@ -1033,7 +1033,7 @@ function setupRoomEvents() {
 
   room.on(LivekitClient.RoomEvent.ParticipantDisconnected, p => {
     removeParticipantVideo(p.sid);
-    addSys(esc(p.identity) + ' saliÃ³ de la llamada');
+    addSys(esc(p.identity) + ' salió de la llamada');
     updatePC();
     updateChatSel();
     rmKnock(p.sid);
@@ -1072,7 +1072,7 @@ function setupRoomEvents() {
 
   room.on(LivekitClient.RoomEvent.DataReceived, async (payload, participant, kind) => {
     try {
-      // ARQ-02: rate limiting â€” per participant + global
+      // ARQ-02: rate limiting — per participant + global
       if (!checkGlobalRate()) { return; } // room-wide flood
       if (!checkMsgRate(participant?.identity)) {
         console.warn('Rate limit exceeded:', participant?.identity);
@@ -1089,7 +1089,7 @@ function setupRoomEvents() {
         msgBytes = data; // legacy
       }
       const text = new TextDecoder().decode(msgBytes);
-      // Prototype pollution prevention â€” parse and freeze
+      // Prototype pollution prevention — parse and freeze
       const msgRaw = JSON.parse(text);
       if (msgRaw.__proto__ || msgRaw.constructor || msgRaw.prototype) {
         console.warn('SECURITY: prototype pollution attempt blocked');
@@ -1097,12 +1097,12 @@ function setupRoomEvents() {
       }
       const msg = Object.freeze(Object.assign(Object.create(null), msgRaw));
 
-      // Schema validation â€” reject malformed messages
+      // Schema validation — reject malformed messages
       if (!validateMsgSchema(msg)) {
         console.warn('SECURITY: schema validation failed for type:', msg.type);
         return;
       }
-      // ARQ-01: verify signature â€” reject unsigned messages for privileged actions
+      // ARQ-01: verify signature — reject unsigned messages for privileged actions
       const privilegedTypes = ['admitted','rejected','mute-you','unmute-you','kick','lock','show-doc','close-doc','poll-launch'];
       if (privilegedTypes.includes(msg.type)) {
         const valid = await verifyMessage(msg);
@@ -1112,19 +1112,19 @@ function setupRoomEvents() {
         }
       }
 
-      // ARQ-03: role validation â€” only host can send privileged commands
+      // ARQ-03: role validation — only host can send privileged commands
       const hostOnlyTypes = ['mute-you','unmute-you','kick','lock'];
       if (hostOnlyTypes.includes(msg.type)) {
         // Verify sender is the known host (first joiner per server_secure.js)
         const sender = room.remoteParticipants.get(msg._from);
-        // If _from matches participant identity â€” structural check
+        // If _from matches participant identity — structural check
         if (msg._from !== participant?.identity) {
           console.warn('SECURITY: identity mismatch in message:', msg._from, '!=', participant?.identity);
           return;
         }
       }
 
-      wDebug('MSG:' + text.substring(0,60) + (data[0]===0x01?' [E2Eâœ“]':' [plain]'));
+      wDebug('MSG:' + text.substring(0,60) + (data[0]===0x01?' [E2E✓]':' [plain]'));
       handleDataMsg(msg, participant);
     } catch(e) {
       wDebug('ERR:' + e.message);
@@ -1146,7 +1146,7 @@ function setupRoomEvents() {
 
 
 
-// â•â• SCHEMA VALIDATION (prototype pollution + type enforcement) â•â•
+// ══ SCHEMA VALIDATION (prototype pollution + type enforcement) ══
 const _MSG_SCHEMAS = {
   'chat':       { name: 'string', message: 'string' },
   'knock':      { name: 'string' },
@@ -1171,7 +1171,7 @@ const _MSG_SCHEMAS = {
 
 function validateMsgSchema(msg) {
   const schema = _MSG_SCHEMAS[msg.type];
-  // M1 FIX: reject unknown types â€” don't silently pass them
+  // M1 FIX: reject unknown types — don't silently pass them
   if (schema === undefined) {
     console.warn('SECURITY: unknown message type rejected:', msg.type);
     return false;
@@ -1188,12 +1188,12 @@ function validateMsgSchema(msg) {
   return true;
 }
 
-// â•â• MESSAGE SIGNING â€” ECDSA P-256 (asymmetric, no bootstrap problem) â•â•
-let _ecdsaPrivKey = null;   // host only â€” never leaves host
-let _ecdsaPubKey  = null;   // used to verify â€” shared via URL
+// ══ MESSAGE SIGNING — ECDSA P-256 (asymmetric, no bootstrap problem) ══
+let _ecdsaPrivKey = null;   // host only — never leaves host
+let _ecdsaPubKey  = null;   // used to verify — shared via URL
 
 async function initSigningKey() {
-  // Generate ECDSA P-256 key pair â€” host signs, guests verify with pubkey in URL
+  // Generate ECDSA P-256 key pair — host signs, guests verify with pubkey in URL
   const pair = await crypto.subtle.generateKey(
     { name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']
   );
@@ -1220,7 +1220,7 @@ async function importSigningKey(pubB64) {
   } catch(e) { console.warn('importSigningKey failed:', e); }
 }
 
-// Canonical JSON â€” deterministic key order (fixes JSON ordering attacks)
+// Canonical JSON — deterministic key order (fixes JSON ordering attacks)
 function canonicalize(obj) {
   if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return JSON.stringify(obj);
   return '{' + Object.keys(obj).sort().map(k => JSON.stringify(k) + ':' + canonicalize(obj[k])).join(',') + '}';
@@ -1238,7 +1238,7 @@ async function signMessage(data) {
   return { ...full, _sig: btoa(String.fromCharCode(...new Uint8Array(sig))) };
 }
 
-// Nonce store â€” prevent replay even within 30s window
+// Nonce store — prevent replay even within 30s window
 const _usedNonces = new Set();
 function _cleanNonces() { if (_usedNonces.size > 10000) _usedNonces.clear(); }
 
@@ -1270,14 +1270,14 @@ function checkMsgRate(identity, limit = 20, windowMs = 1000) {
   entry.count++;
   entry.total++;
   _msgRates.set(key, entry);
-  // Hard ban: if participant sent >500 total msgs this session â€” suspicious
+  // Hard ban: if participant sent >500 total msgs this session — suspicious
   if (entry.total > 500 && !['chat','wb-draw','notes'].includes('')) {
     return entry.count <= 5; // throttle hard
   }
   return entry.count <= limit;
 }
 
-// Global rate â€” total messages across all participants per second
+// Global rate — total messages across all participants per second
 let _globalMsgCount = 0, _globalResetAt = Date.now() + 1000;
 function checkGlobalRate() {
   const now = Date.now();
@@ -1286,7 +1286,7 @@ function checkGlobalRate() {
   return _globalMsgCount <= 200; // max 200 msg/s room-wide
 }
 
-// â•â• DATA MESSAGES â•â•
+// ══ DATA MESSAGES ══
 async function sendData(data, reliable=true) {
   if (!room) return;
   const kind = reliable ? 0 : 1;
@@ -1329,7 +1329,7 @@ function handleDataMsg(msg, participant) {
       if (isHost) break;
       if (window._knockInterval) clearInterval(window._knockInterval);
       if (msg.pubKey) importSigningKey(msg.pubKey);
-      // BLOQUE 2b: publish tracks â€” single attempt, no retry loops
+      // BLOQUE 2b: publish tracks — single attempt, no retry loops
       (async () => {
         try {
           // C1 FIX: if we have an upgradeToken, reconnect with canPublish:true
@@ -1346,7 +1346,7 @@ function handleDataMsg(msg, participant) {
               await room.localParticipant.setMicrophoneEnabled(true).catch(()=>{});
             }
           } else {
-            // No upgrade token â€” try enabling (may fail if server has canPublish:false)
+            // No upgrade token — try enabling (may fail if server has canPublish:false)
             await room.localParticipant.setCameraEnabled(true).catch(()=>{});
             await room.localParticipant.setMicrophoneEnabled(true).catch(()=>{});
           }
@@ -1390,7 +1390,7 @@ function handleDataMsg(msg, participant) {
       if (ta.value !== msg.text) {
         ta.value = msg.text;
         document.getElementById('notesStat').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es', {hour:'2-digit',minute:'2-digit'});
-        if (activePanel !== 'notes') toast('ðŸ“ Notas actualizadas â€” abre el panel Notas');
+        if (activePanel !== 'notes') toast('📝 Notas actualizadas — abre el panel Notas');
       }
       break;
     case 'agenda':
@@ -1398,7 +1398,7 @@ function handleDataMsg(msg, participant) {
       document.getElementById('agendaInput').value = msg.text;
       const av = document.getElementById('agendaViewWov');
       if (agendaText) { av.style.display = 'block'; av.textContent = agendaText; }
-      toast('ðŸ“‹ Agenda actualizada por el organizador');
+      toast('📋 Agenda actualizada por el organizador');
       break;
     case 'reaction':
       showReaction(msg.emoji, msg.x || 50);
@@ -1418,7 +1418,7 @@ function handleDataMsg(msg, participant) {
           if (!hbadge) {
             hbadge = document.createElement('div');
             hbadge.className = 'hand-badge';
-            hbadge.textContent = 'âœ‹';
+            hbadge.textContent = '✋';
             vwrap.appendChild(hbadge);
           }
         } else { hbadge && hbadge.remove(); }
@@ -1426,7 +1426,7 @@ function handleDataMsg(msg, participant) {
       // Persistent host notification
       if (msg.raised && isHost) showHandAlert(hName);
       else if (!msg.raised) dismissHandAlert(hName);
-      addSys(hName + ' ' + (msg.raised ? 'levantÃ³ âœ‹ la mano' : 'bajÃ³ la mano'));
+      addSys(hName + ' ' + (msg.raised ? 'levantó ✋ la mano' : 'bajó la mano'));
       break;
     case 'doc-share':
       receiveDoc(msg.doc);
@@ -1437,12 +1437,12 @@ function handleDataMsg(msg, participant) {
     case 'show-doc':
       const _sd = sharedDocs.find(d => d.id === msg.docId);
       if (_sd) {
-        toast('ðŸ“„ ' + esc(msg.senderName || 'Alguien') + ' comparte: ' + esc(_sd.name));
+        toast('📄 ' + esc(msg.senderName || 'Alguien') + ' comparte: ' + esc(_sd.name));
         showDoc(_sd.id);
       } else {
-        // Doc still arriving in chunks â€” show when ready
+        // Doc still arriving in chunks — show when ready
         window._pendingShowDoc = msg.docId;
-        toast('ðŸ“„ ' + esc(msg.senderName || 'Alguien') + ' comparte un archivo â€” recibiendoâ€¦');
+        toast('📄 ' + esc(msg.senderName || 'Alguien') + ' comparte un archivo — recibiendo…');
       }
       break;
     case 'close-doc':
@@ -1462,7 +1462,7 @@ function handleDataMsg(msg, participant) {
       break;
     case 'mute-you':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
-      // BLOQUE 4a: mute ALL audio tracks â€” LiveKit + custom published
+      // BLOQUE 4a: mute ALL audio tracks — LiveKit + custom published
       isMuted = true;
       room.localParticipant.setMicrophoneEnabled(false).catch(()=>{});
       room.localParticipant.trackPublications?.forEach(pub => {
@@ -1473,11 +1473,11 @@ function handleDataMsg(msg, participant) {
       // Also mute local stream tracks if exist
       window._localStream?.getAudioTracks().forEach(t => { t.enabled = false; });
       updateMicBtn();
-      toast('El host te silenciÃ³ ðŸ”‡');
+      toast('El host te silenció 🔇');
       break;
     case 'unmute-you':
       if (msg.forIdentity && msg.forIdentity !== myName) break;
-      // BLOQUE 4b: unmute ALL audio tracks â€” mirror of mute-you
+      // BLOQUE 4b: unmute ALL audio tracks — mirror of mute-you
       isMuted = false;
       room.localParticipant.setMicrophoneEnabled(true).catch(()=>{});
       room.localParticipant.trackPublications?.forEach(pub => {
@@ -1487,10 +1487,10 @@ function handleDataMsg(msg, participant) {
       });
       window._localStream?.getAudioTracks().forEach(t => { t.enabled = true; });
       updateMicBtn();
-      toast('El host activÃ³ tu micrÃ³fono ðŸŽ¤');
+      toast('El host activó tu micrófono 🎤');
       break;
     case 'key-rotate':
-      // Host rotated ECDSA key â€” import new public key (guests verify only)
+      // Host rotated ECDSA key — import new public key (guests verify only)
       if (msg.pubKey && !isHost) importSigningKey(msg.pubKey);
       break;
     case 'kick':
@@ -1504,17 +1504,17 @@ function handleDataMsg(msg, participant) {
   }
 }
 
-// â•â• HOST ADMIT/REJECT â•â•
+// ══ HOST ADMIT/REJECT ══
 function showKnock(sid, name) {
   if (document.getElementById('k-' + sid)) return;
   const card = document.createElement('div');
   card.className = 'kcard'; card.id = 'k-' + sid;
   const init = (name[0] || '?').toUpperCase();
-  card.innerHTML = `<div class="kch"><div class="kav">${init}</div><div><div class="kname">${esc(name)}</div><div class="ksub">Solicita unirse</div></div></div><div class="kact"><button class="kadm">âœ“ Admitir</button><button class="krej">âœ• Rechazar</button></div>`;
+  card.innerHTML = `<div class="kch"><div class="kav">${init}</div><div><div class="kname">${esc(name)}</div><div class="ksub">Solicita unirse</div></div></div><div class="kact"><button class="kadm">✓ Admitir</button><button class="krej">✕ Rechazar</button></div>`;
   card.querySelector('.kadm').addEventListener('click', () => admitParticipant(sid, name));
   card.querySelector('.krej').addEventListener('click', () => rejectParticipant(sid, name));
   document.getElementById('wQueue').appendChild(card);
-  toast(name + ' estÃ¡ esperando');
+  toast(name + ' está esperando');
 }
 
 function rmKnock(sid) { document.getElementById('k-' + sid)?.remove(); }
@@ -1557,7 +1557,7 @@ async function admitParticipant(sid, name) {
   }
 
   setWov(false);
-  addSys(esc(name) + ' fue admitido âœ“');
+  addSys(esc(name) + ' fue admitido ✓');
   updateChatSel();
 }
 
@@ -1570,7 +1570,7 @@ async function rejectParticipant(sid, name) {
   }
 }
 
-// â•â• VIDEO â•â•
+// ══ VIDEO ══
 function fixMobileViewport() {
   const vh = window.innerHeight;
   const mtg = document.getElementById('meeting');
@@ -1588,7 +1588,7 @@ function enterMeeting() {
   mtg.style.height = window.innerHeight + 'px';
   setTimeout(fixMobileViewport, 100);
   // host-only items controlled by CSS .is-host class on body
-  document.getElementById('dispRoom').textContent = roomId.slice(0, 10) + 'â€¦';
+  document.getElementById('dispRoom').textContent = roomId.slice(0, 10) + '…';
   attachLocalVideo();
   startTimer();
   updateChatSel();
@@ -1598,7 +1598,7 @@ function attachLocalVideo() {
   const grid = document.getElementById('vGrid');
   let wrap = document.getElementById('vw-local');
   if (!wrap) {
-    wrap = mkWrap('vw-local', 'lbl-vw-local', myName + ' (TÃº)', true);
+    wrap = mkWrap('vw-local', 'lbl-vw-local', myName + ' (Tú)', true);
     grid.appendChild(wrap);
     updateGrid();
   }
@@ -1645,22 +1645,22 @@ function mkWrap(id, lblId, label, muted, sid) {
   const w = document.createElement('div'); w.className = 'vwrap'; w.id = id;
   const v = document.createElement('video'); v.autoplay = true; v.playsInline = true; v.muted = !!muted;
   const l = document.createElement('div'); l.className = 'vlabel'; l.id = lblId;
-  l.innerHTML = `<span>${esc(label.replace(/ \(TÃº\)/, ''))}</span>${!muted ? ' <span class="hand-ind" style="display:none">âœ‹</span>' : ''}`;
+  l.innerHTML = `<span>${esc(label.replace(/ \(Tú\)/, ''))}</span>${!muted ? ' <span class="hand-ind" style="display:none">✋</span>' : ''}`;
   const ov = document.createElement('div'); ov.className = 'voff'; ov.id = 'voff-' + id;
-  const init = (label.replace(/ \(TÃº\)/, '')[0] || '?').toUpperCase();
+  const init = (label.replace(/ \(Tú\)/, '')[0] || '?').toUpperCase();
   ov.innerHTML = '<div class="vavc"></div><div class="vol-bar"><span style="height:4px"></span><span style="height:4px"></span><span style="height:4px"></span></div>';
   ov.querySelector('.vavc').textContent = init;
   let ctx = '';
   if (!muted && isHost && sid) {
-    const _identity = label.replace(/ \(TÃº\)/, '');
-    ctx = `<div class="vctx" data-identity="${esc(_identity)}"><button class="vctxbtn">â‹¯</button><div class="vctxdrop"><button class="vctx-mute" data-mute-state="0">ðŸ”‡ Silenciar</button><button class="dk vctx-kick">ðŸš« Expulsar</button></div></div>`;
+    const _identity = label.replace(/ \(Tú\)/, '');
+    ctx = `<div class="vctx" data-identity="${esc(_identity)}"><button class="vctxbtn">⋯</button><div class="vctxdrop"><button class="vctx-mute" data-mute-state="0">🔇 Silenciar</button><button class="dk vctx-kick">🚫 Expulsar</button></div></div>`;
   }
   w.append(v, l, ov);
   if (ctx) { const cd = document.createElement('div'); cd.innerHTML = ctx; w.appendChild(cd.firstChild); }
   return w;
 }
 
-// â•â• SCREEN SHARE â•â•
+// ══ SCREEN SHARE ══
 async function toggleScreen() {
   if (!isScreenSharing) {
     try {
@@ -1668,9 +1668,9 @@ async function toggleScreen() {
       isScreenSharing = true;
       const b = document.getElementById('ccScreen');
       b.classList.add('on');
-      b.querySelector('.ci').textContent = 'â¹ï¸';
+      b.querySelector('.ci').textContent = '⏹️';
       b.querySelector('.cl').textContent = 'Detener';
-      toast('Compartiendo pantallaâ€¦');
+      toast('Compartiendo pantalla…');
 
       // Build SS layout
       const ssPub = room.localParticipant.getTrack(LivekitClient.Track.Source.ScreenShare);
@@ -1688,7 +1688,7 @@ async function stopScreen() {
   endSSLayout();
   const b = document.getElementById('ccScreen');
   b.classList.remove('on');
-  b.querySelector('.ci').textContent = 'ðŸ–¥ï¸';
+  b.querySelector('.ci').textContent = '🖥️';
   b.querySelector('.cl').textContent = 'Pantalla';
   toast('Pantalla detenida');
 }
@@ -1700,8 +1700,8 @@ function buildSSLayout(sid, sharerName, track) {
   const mainWrap = document.createElement('div'); mainWrap.className = 'ss-main-wrap';
   const mainVid = document.createElement('video'); mainVid.autoplay = true; mainVid.playsInline = true; mainVid.muted = (sid === 'local');
   track.attach(mainVid);
-  const lbl = document.createElement('div'); lbl.className = 'ss-label'; lbl.textContent = 'ðŸ–¥ï¸ ' + sharerName + ' estÃ¡ compartiendo';
-  const fsBtn = document.createElement('button'); fsBtn.className = 'ss-fullbtn'; fsBtn.textContent = 'â›¶ Pantalla completa';
+  const lbl = document.createElement('div'); lbl.className = 'ss-label'; lbl.textContent = '🖥️ ' + sharerName + ' está compartiendo';
+  const fsBtn = document.createElement('button'); fsBtn.className = 'ss-fullbtn'; fsBtn.textContent = '⛶ Pantalla completa';
   fsBtn.onclick = () => { if (mainVid.requestFullscreen) mainVid.requestFullscreen(); else if (mainVid.webkitRequestFullscreen) mainVid.webkitRequestFullscreen(); };
   mainWrap.append(mainVid, lbl, fsBtn);
   const strip = document.createElement('div'); strip.className = 'ss-strip'; strip.id = 'ssStrip';
@@ -1723,7 +1723,7 @@ function endSSLayout() {
   updateGrid();
 }
 
-// â•â• CONTROLS â•â•
+// ══ CONTROLS ══
 async function toggleMic() {
   isMuted = !isMuted;
   // BLOQUE 4c: affect all audio tracks consistently
@@ -1739,7 +1739,7 @@ async function toggleMic() {
 function updateMicBtn() {
   const b = document.getElementById('ccMic');
   b.classList.toggle('off', isMuted);
-  b.querySelector('.ci').textContent = isMuted ? 'ðŸ”‡' : 'ðŸŽ¤';
+  b.querySelector('.ci').textContent = isMuted ? '🔇' : '🎤';
   b.querySelector('.cl').textContent = isMuted ? 'Silenc.' : 'Micro';
 }
 async function toggleCam() {
@@ -1747,8 +1747,8 @@ async function toggleCam() {
   await room.localParticipant.setCameraEnabled(!isVideoOff);
   const b = document.getElementById('ccCam');
   b.classList.toggle('off', isVideoOff);
-  b.querySelector('.ci').textContent = isVideoOff ? 'ðŸš«' : 'ðŸ“·';
-  b.querySelector('.cl').textContent = isVideoOff ? 'Sin cam.' : 'CÃ¡mara';
+  b.querySelector('.ci').textContent = isVideoOff ? '🚫' : '📷';
+  b.querySelector('.cl').textContent = isVideoOff ? 'Sin cam.' : 'Cámara';
   document.getElementById('voff-vw-local')?.classList.toggle('show', isVideoOff);
   // For guests on mobile: update local preview after re-enable
   // BLOQUE 3b: update preview from published track (not stored stream)
@@ -1772,10 +1772,10 @@ async function toggleHand() {
   const myWrap = document.getElementById('vw-local');
   if (myWrap) {
     let hb = myWrap.querySelector('.hand-badge');
-    if (handRaised) { if (!hb) { hb = document.createElement('div'); hb.className = 'hand-badge'; hb.textContent = 'âœ‹'; myWrap.appendChild(hb); } }
+    if (handRaised) { if (!hb) { hb = document.createElement('div'); hb.className = 'hand-badge'; hb.textContent = '✋'; myWrap.appendChild(hb); } }
     else { hb && hb.remove(); }
   }
-  toast(handRaised ? 'Mano levantada âœ‹' : 'Mano bajada');
+  toast(handRaised ? 'Mano levantada ✋' : 'Mano bajada');
 }
 async function muteRemote(identity) {
   const p = room.remoteParticipants.get(identity);
@@ -1784,11 +1784,11 @@ async function muteRemote(identity) {
   const isMutedNow = btn?.dataset.muteState === '1';
   if (isMutedNow) {
     await sendData({ type: 'unmute-you', forIdentity: identity });
-    if (btn) { btn.dataset.muteState = '0'; btn.textContent = 'ðŸ”‡ Silenciar'; }
+    if (btn) { btn.dataset.muteState = '0'; btn.textContent = '🔇 Silenciar'; }
     toast(esc(identity) + ' activado');
   } else {
     await sendData({ type: 'mute-you', forIdentity: identity });
-    if (btn) { btn.dataset.muteState = '1'; btn.textContent = 'ðŸ”Š Activar mic'; }
+    if (btn) { btn.dataset.muteState = '1'; btn.textContent = '🔊 Activar mic'; }
     toast(esc(identity) + ' silenciado');
   }
 }
@@ -1805,7 +1805,7 @@ async function toggleLock() {
   await sendData({ type: 'lock', locked: isRoomLocked });
   document.getElementById('lockBadge').classList.toggle('show', isRoomLocked);
   document.getElementById('lockTxt').textContent = isRoomLocked ? 'Desbloquear sala' : 'Bloquear sala';
-  toast(isRoomLocked ? 'ðŸ”’ Sala bloqueada' : 'ðŸ”“ Sala desbloqueada');
+  toast(isRoomLocked ? '🔒 Sala bloqueada' : '🔓 Sala desbloqueada');
   document.getElementById('moreWrap').classList.remove('open');
 }
 async function leaveRoom() {
@@ -1816,7 +1816,7 @@ async function leaveRoom() {
   location.reload();
 }
 
-// â•â• PANELS â•â•
+// ══ PANELS ══
 function togglePanel(name) {
   if (activePanel === name) { document.getElementById(name + 'Panel').classList.remove('open'); document.getElementById('cc' + cap(name)).classList.remove('on'); activePanel = null; return; }
   if (activePanel) { document.getElementById(activePanel + 'Panel').classList.remove('open'); document.getElementById('cc' + cap(activePanel)).classList.remove('on'); }
@@ -1830,25 +1830,25 @@ function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 function toggleMore() { document.getElementById('moreWrap').classList.toggle('open'); }
 document.addEventListener('click', e => {
   if (!document.getElementById('moreWrap')?.contains(e.target)) document.getElementById('moreWrap')?.classList.remove('open');
-  // vctx event delegation â€” secure, no onclick injection
+  // vctx event delegation — secure, no onclick injection
   const muteBtn = e.target.closest('.vctx-mute');
   if (muteBtn) { const id = muteBtn.closest('.vctx')?.dataset.identity; if (id) muteRemote(id); }
   const kickBtn = e.target.closest('.vctx-kick');
   if (kickBtn) { const id = kickBtn.closest('.vctx')?.dataset.identity; if (id) kickRemote(id); }
 });
 
-// â•â• LINK â•â•
+// ══ LINK ══
 function regenLink() {
   const ms = parseInt(document.getElementById('expirySelect').value);
   currentLink = buildLink(roomId, ms);
   const el = document.getElementById('shareLink'); el.textContent = currentLink; el.href = currentLink;
-  document.getElementById('expiryBadge').textContent = 'â± Expira en ' + fmtExpiry(ms) + ' a partir de ahora';
+  document.getElementById('expiryBadge').textContent = '⏱ Expira en ' + fmtExpiry(ms) + ' a partir de ahora';
 }
 function openInvLink(e) { if (e) e.preventDefault(); if (!currentLink) regenLink(); window.open(currentLink, '_blank'); }
-function copyInviteLink() { if (!currentLink) regenLink(); navigator.clipboard.writeText(currentLink).then(() => toast('Link copiado âœ“')); }
+function copyInviteLink() { if (!currentLink) regenLink(); navigator.clipboard.writeText(currentLink).then(() => toast('Link copiado ✓')); }
 function setWov(v) { const el = document.getElementById('wov'); el.classList.toggle('show', v); if (v) regenLink(); if (agendaText) { document.getElementById('agendaViewWov').style.display = 'block'; document.getElementById('agendaViewWov').textContent = agendaText; } }
 
-// â•â• GRID â•â•
+// ══ GRID ══
 function updateGrid() {
   const grid = document.getElementById('vGrid');
   if (!grid) return;
@@ -1869,7 +1869,7 @@ function updateChatSel() {
   if (cur) sel.value = cur;
 }
 
-// â•â• CHAT â•â•
+// ══ CHAT ══
 async function sendChat() {
   const inp = document.getElementById('chatInput'); const msg = inp.value.trim(); if (!msg) return;
   inp.value = '';
@@ -1888,7 +1888,7 @@ function addChatMsg(name, text, isMe, toName) {
   const c = document.getElementById('chatMsgs');
   const d = document.createElement('div'); d.className = 'cmsg' + (toName ? ' pmsg' : '');
   const t = new Date().toLocaleTimeString('es', {hour:'2-digit',minute:'2-digit'});
-  const priv = toName ? ` <span style="color:var(--warn);font-size:.68rem">â†’ ${esc(toName)} (privado)</span>` : '';
+  const priv = toName ? ` <span style="color:var(--warn);font-size:.68rem">→ ${esc(toName)} (privado)</span>` : '';
   d.innerHTML = `<div class="cn ${isMe?'me':'all'}">${esc(name)}${priv}</div><div class="ct">${esc(text)}</div><div class="ctm">${t}</div>`;
   c.appendChild(d); scrollC();
 }
@@ -1901,19 +1901,19 @@ function addSys(text) {
 function scrollC() { const m = document.getElementById('chatMsgs'); m.scrollTop = m.scrollHeight; }
 function exportChat() {
   const items = document.getElementById('chatMsgs').querySelectorAll('.cmsg');
-  let txt = 'Chat NexMeet â€” ' + new Date().toLocaleString('es') + '\n\n';
+  let txt = 'Chat NexMeet — ' + new Date().toLocaleString('es') + '\n\n';
   items.forEach(i => { const n=i.querySelector('.cn')?.textContent||''; const t=i.querySelector('.ct')?.textContent||''; const tm=i.querySelector('.ctm')?.textContent||''; txt+=`[${tm}] ${n}: ${t}\n`; });
   dl(txt, 'chat-nexmeet.txt', 'text/plain');
   document.getElementById('moreWrap').classList.remove('open');
 }
 
-// â•â• DOCS â•â•
-function fIcon(t){if(t.includes('pdf'))return'ðŸ“„';if(t.includes('image'))return'ðŸ–¼ï¸';if(t.includes('word')||t.includes('document'))return'ðŸ“';if(t.includes('sheet')||t.includes('excel'))return'ðŸ“Š';return'ðŸ“Ž';}
+// ══ DOCS ══
+function fIcon(t){if(t.includes('pdf'))return'📄';if(t.includes('image'))return'🖼️';if(t.includes('word')||t.includes('document'))return'📝';if(t.includes('sheet')||t.includes('excel'))return'📊';return'📎';}
 function fSize(b){if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+'KB';return(b/1048576).toFixed(1)+'MB';}
 function uploadFiles(input) {
   Array.from(input.files).forEach(file => {
     if (file.size > 5*1024*1024) { toast(file.name + ': supera 5MB'); return; }
-    if (sharedDocs.length >= 100) { toast('LÃ­mite de 100 archivos por sesiÃ³n alcanzado'); return; }
+    if (sharedDocs.length >= 100) { toast('Límite de 100 archivos por sesión alcanzado'); return; }
     const allowedTypes = ['image/','application/pdf','application/vnd.openxmlformats','application/vnd.ms-excel','application/msword','text/plain','text/csv'];
     if (!allowedTypes.some(t => file.type.startsWith(t))) { toast(file.name + ': tipo de archivo no permitido'); return; }
     const r = new FileReader();
@@ -1935,18 +1935,18 @@ function uploadFiles(input) {
         });
         await new Promise(r => setTimeout(r, 30)); // small delay between chunks
       }
-      toast(file.name + ' compartido âœ“');
+      toast(file.name + ' compartido ✓');
     };
     r.readAsDataURL(file);
   }); input.value = '';
 }
 function receiveDoc(doc) {
   if (sharedDocs.find(d => d.id === doc.id)) return;
-  if (sharedDocs.length >= 100) { toast('LÃ­mite de archivos compartidos alcanzado'); return; }
+  if (sharedDocs.length >= 100) { toast('Límite de archivos compartidos alcanzado'); return; }
   sharedDocs.push(doc); addDocItem(doc);
   if (activePanel !== 'docs') { unreadDocs++; const b=document.getElementById('docsBadge'); b.style.display='inline'; b.textContent=unreadDocs; }
-  addSys(esc(doc.senderName) + ' compartiÃ³: ' + esc(doc.name));
-  toast('ðŸ“Ž ' + esc(doc.senderName || '') + ' compartiÃ³ un archivo');
+  addSys(esc(doc.senderName) + ' compartió: ' + esc(doc.name));
+  toast('📎 ' + esc(doc.senderName || '') + ' compartió un archivo');
 }
 
 // Buffer for incoming chunks
@@ -1971,8 +1971,8 @@ function receiveDocChunk(msg) {
     if (!sharedDocs.find(d => d.id === doc.id)) {
       sharedDocs.push(doc); addDocItem(doc);
       if (activePanel !== 'docs') { unreadDocs++; const b=document.getElementById('docsBadge'); b.style.display='inline'; b.textContent=unreadDocs; }
-      addSys(doc.senderName + ' compartiÃ³ "' + doc.name + '"');
-      toast('ðŸ“Ž ' + esc(doc.senderName) + ' compartiÃ³: ' + esc(doc.name));
+      addSys(doc.senderName + ' compartió "' + doc.name + '"');
+      toast('📎 ' + esc(doc.senderName) + ' compartió: ' + esc(doc.name));
     }
     // If a show-doc was pending for this doc, show it now
     if (window._pendingShowDoc === msg.docId) {
@@ -1985,14 +1985,14 @@ function addDocItem(doc) {
   document.getElementById('docsEmpty').style.display = 'none';
   const list = document.getElementById('docsList');
   const item = document.createElement('div'); item.className = 'ditem';
-  item.innerHTML = `<div class="dicon">${fIcon(doc.type)}</div><div class="dinfo"><div class="dname" title="${esc(doc.name)}">${esc(doc.name)}</div><div class="dmeta">${fSize(doc.size)} Â· ${esc(doc.senderName)}</div></div><div style="display:flex;gap:.3rem"><button class="ddl ddl-show" title="Mostrar en pantalla">ðŸ–¥ï¸</button><button class="ddl ddl-dl" title="Descargar">â¬‡</button></div>`;
+  item.innerHTML = `<div class="dicon">${fIcon(doc.type)}</div><div class="dinfo"><div class="dname" title="${esc(doc.name)}">${esc(doc.name)}</div><div class="dmeta">${fSize(doc.size)} · ${esc(doc.senderName)}</div></div><div style="display:flex;gap:.3rem"><button class="ddl ddl-show" title="Mostrar en pantalla">🖥️</button><button class="ddl ddl-dl" title="Descargar">⬇</button></div>`;
   item.querySelector('.ddl-show').addEventListener('click', () => showDoc(doc.id));
   item.querySelector('.ddl-dl').addEventListener('click', () => dlDoc(doc.id));
   list.appendChild(item);
 }
 function dlDoc(id) { const doc=sharedDocs.find(d=>d.id===id); if(!doc)return; const a=document.createElement('a');a.href=doc.data;a.download=doc.name;a.click(); }
 
-// â•â• NOTES â•â•
+// ══ NOTES ══
 async function syncNotes() {
   clearTimeout(notesSyncTimer);
   notesSyncTimer = setTimeout(async () => {
@@ -2004,10 +2004,10 @@ async function syncNotes() {
 function exportNotes() {
   const txt = document.getElementById('notesArea').value;
   if (!txt) { toast('No hay notas'); return; }
-  dl('Notas NexMeet â€” '+new Date().toLocaleString('es')+'\n\n'+txt,'notas-nexmeet.txt','text/plain');
+  dl('Notas NexMeet — '+new Date().toLocaleString('es')+'\n\n'+txt,'notas-nexmeet.txt','text/plain');
 }
 
-// â•â• RECORDING â•â•
+// ══ RECORDING ══
 function toggleRec() {
   if (!isRecording) {
     try {
@@ -2049,26 +2049,26 @@ function toggleRec() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href=url; a.download='nexmeet-'+Date.now()+'.webm'; a.click();
         setTimeout(()=>URL.revokeObjectURL(url),10000);
-        toast('GrabaciÃ³n descargada âœ“');
+        toast('Grabación descargada ✓');
       };
       recorder.start(1000); isRecording = true;
       document.getElementById('recInd').classList.add('show');
       document.getElementById('recNotif').classList.add('show');
-      document.getElementById('recIcon').textContent = 'â¹ï¸';
-      document.getElementById('recTxt').textContent = 'Detener grabaciÃ³n';
-      toast('GrabaciÃ³n iniciada âº');
+      document.getElementById('recIcon').textContent = '⏹️';
+      document.getElementById('recTxt').textContent = 'Detener grabación';
+      toast('Grabación iniciada ⏺');
     } catch { toast('No se puede grabar en este navegador'); }
   } else {
     recorder?.stop(); isRecording = false;
     document.getElementById('recInd').classList.remove('show');
     document.getElementById('recNotif').classList.remove('show');
-    document.getElementById('recIcon').textContent = 'âº';
+    document.getElementById('recIcon').textContent = '⏺';
     document.getElementById('recTxt').textContent = 'Grabar';
   }
   document.getElementById('moreWrap').classList.remove('open');
 }
 
-// â•â• REACTIONS â•â•
+// ══ REACTIONS ══
 async function sendReaction(emoji) {
   const x = 20 + Math.random() * 60;
   showReaction(emoji, x);
@@ -2081,20 +2081,20 @@ function showReaction(emoji, x) {
   setTimeout(() => el.remove(), 3100);
 }
 
-// â•â• AGENDA â•â•
+// ══ AGENDA ══
 function openAgenda() { document.getElementById('agendaOverlay').classList.add('show'); document.getElementById('agendaInput').value = agendaText; document.getElementById('moreWrap').classList.remove('open'); }
 function closeAgenda() { document.getElementById('agendaOverlay').classList.remove('show'); }
 async function saveAgenda() {
   agendaText = document.getElementById('agendaInput').value.trim();
   await sendData({type:'agenda',text:agendaText});
   if (agendaText) { document.getElementById('agendaViewWov').style.display='block'; document.getElementById('agendaViewWov').textContent=agendaText; }
-  closeAgenda(); toast('Agenda compartida âœ“');
+  closeAgenda(); toast('Agenda compartida ✓');
 }
 
-// â•â• POLLS â•â•
-function openPoll() { document.getElementById('pollOverlay').classList.add('show'); document.getElementById('pollCreate').style.display='block'; document.getElementById('pollVote').style.display='none'; document.getElementById('pollResults').style.display='none'; document.getElementById('pollTitle').textContent='ðŸ“Š Nueva encuesta'; myVote=null; document.getElementById('moreWrap').classList.remove('open'); }
+// ══ POLLS ══
+function openPoll() { document.getElementById('pollOverlay').classList.add('show'); document.getElementById('pollCreate').style.display='block'; document.getElementById('pollVote').style.display='none'; document.getElementById('pollResults').style.display='none'; document.getElementById('pollTitle').textContent='📊 Nueva encuesta'; myVote=null; document.getElementById('moreWrap').classList.remove('open'); }
 function closePoll() { document.getElementById('pollOverlay').classList.remove('show'); }
-function addPollOpt() { const c=document.getElementById('pollOpts').children.length+1; const r=document.createElement('div'); r.className='poll-opt-row'; r.innerHTML=`<input placeholder="OpciÃ³n ${c}"/>`; document.getElementById('pollOpts').appendChild(r); }
+function addPollOpt() { const c=document.getElementById('pollOpts').children.length+1; const r=document.createElement('div'); r.className='poll-opt-row'; r.innerHTML=`<input placeholder="Opción ${c}"/>`; document.getElementById('pollOpts').appendChild(r); }
 async function launchPoll() {
   const q=document.getElementById('pollQ').value.trim(); if(!q){toast('Escribe una pregunta');return;}
   const opts=[...document.getElementById('pollOpts').querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);
@@ -2102,16 +2102,16 @@ async function launchPoll() {
   pollData={q,opts,votes:opts.map(()=>0),total:0};
   await sendData({type:'poll-launch',poll:{q,opts}});
   showPollResults(); /* keep overlay open so host sees results */
-  toast('Encuesta lanzada ðŸš€ â€” el overlay muestra resultados en vivo');
+  toast('Encuesta lanzada 🚀 — el overlay muestra resultados en vivo');
 }
 function receivePoll(p){pollData={q:p.q,opts:p.opts,votes:p.opts.map(()=>0),total:0};showPollVote();document.getElementById('pollOverlay').classList.add('show');}
-function showPollVote(){document.getElementById('pollTitle').textContent='ðŸ“Š '+pollData.q;document.getElementById('pollCreate').style.display='none';const vd=document.getElementById('pollVote');vd.style.display='block';vd.innerHTML=pollData.opts.map((o,i)=>`<button class="pvote-btn" id="pvote-${i}" onclick="castVote(${i})">${esc(o)}</button>`).join('')+`<button class="btn btn-s" style="width:auto;margin-top:.75rem;font-size:.78rem" onclick="closePoll()">âœ• Cerrar</button>`;}
-async function castVote(idx){if(myVote!==null)return;myVote=idx;await sendData({type:'poll-vote',opt:idx});pollData.votes[idx]++;pollData.total++;document.querySelectorAll('.pvote-btn').forEach((b,i)=>b.classList.toggle('voted',i===idx));toast('Voto registrado âœ“');}
+function showPollVote(){document.getElementById('pollTitle').textContent='📊 '+pollData.q;document.getElementById('pollCreate').style.display='none';const vd=document.getElementById('pollVote');vd.style.display='block';vd.innerHTML=pollData.opts.map((o,i)=>`<button class="pvote-btn" id="pvote-${i}" onclick="castVote(${i})">${esc(o)}</button>`).join('')+`<button class="btn btn-s" style="width:auto;margin-top:.75rem;font-size:.78rem" onclick="closePoll()">✕ Cerrar</button>`;}
+async function castVote(idx){if(myVote!==null)return;myVote=idx;await sendData({type:'poll-vote',opt:idx});pollData.votes[idx]++;pollData.total++;document.querySelectorAll('.pvote-btn').forEach((b,i)=>b.classList.toggle('voted',i===idx));toast('Voto registrado ✓');}
 function receivePollVote(opt){if(!pollData)return;pollData.votes[opt]++;pollData.total++;if(document.getElementById('pollResults').style.display!=='none')renderResults();}
-function showPollResults(){document.getElementById('pollCreate').style.display='none';document.getElementById('pollVote').style.display='none';document.getElementById('pollResults').style.display='block';document.getElementById('pollTitle').textContent='ðŸ“Š Resultados: '+pollData.q;renderResults();}
+function showPollResults(){document.getElementById('pollCreate').style.display='none';document.getElementById('pollVote').style.display='none';document.getElementById('pollResults').style.display='block';document.getElementById('pollTitle').textContent='📊 Resultados: '+pollData.q;renderResults();}
 function renderResults(){const rd=document.getElementById('pollResults');rd.innerHTML=pollData.opts.map((o,i)=>{const pct=pollData.total?Math.round(pollData.votes[i]/pollData.total*100):0;return`<div class="pbar"><div class="pbar-fill" style="width:${pct}%"></div><span class="pbar-lbl">${esc(o)}</span><span class="pbar-pct">${pct}% (${pollData.votes[i]})</span></div>`;}).join('')+`<div style="font-size:.75rem;color:var(--muted);margin-top:.5rem">${pollData.total} respuesta(s)</div><button class="btn btn-s" style="width:auto;margin-top:.75rem;font-size:.78rem" onclick="closePoll()">Cerrar</button>`;}
 
-// â•â• WHITEBOARD â•â•
+// ══ WHITEBOARD ══
 function openWB(){document.getElementById('wbOverlay').classList.add('show');const c=document.getElementById('wbCanvas');c.width=c.offsetWidth||1200;c.height=c.offsetHeight||600;document.getElementById('moreWrap').classList.remove('open');}
 function closeWB(){document.getElementById('wbOverlay').classList.remove('show');}
 function setWbTool(t){wbTool=t;document.getElementById('wbPen').classList.toggle('on',t==='pen');document.getElementById('wbErase').classList.toggle('on',t==='eraser');document.getElementById('wbCanvas').style.cursor=t==='eraser'?'cell':'crosshair';}
@@ -2127,42 +2127,42 @@ function receiveWbStroke(d){const c=document.getElementById('wbCanvas');const ct
 wbC.addEventListener('mousedown',wbDown);wbC.addEventListener('mousemove',wbMove);wbC.addEventListener('mouseup',wbUp);wbC.addEventListener('mouseleave',wbUp);
 wbC.addEventListener('touchstart',wbDown,{passive:false});wbC.addEventListener('touchmove',wbMove,{passive:false});wbC.addEventListener('touchend',wbUp);
 
-// â•â• THEME â•â•
-function toggleTheme(){isLightMode=!isLightMode;document.body.classList.toggle('light-mode',isLightMode);document.getElementById('themeIcon').textContent=isLightMode?'ðŸŒ™':'â˜€ï¸';document.getElementById('themeTxt').textContent=isLightMode?'Modo oscuro':'Modo claro';document.getElementById('moreWrap').classList.remove('open');}
+// ══ THEME ══
+function toggleTheme(){isLightMode=!isLightMode;document.body.classList.toggle('light-mode',isLightMode);document.getElementById('themeIcon').textContent=isLightMode?'🌙':'☀️';document.getElementById('themeTxt').textContent=isLightMode?'Modo oscuro':'Modo claro';document.getElementById('moreWrap').classList.remove('open');}
 
-// â•â• AI REPORT â•â•
+// ══ AI REPORT ══
 function saveGroqKey(){const key=document.getElementById('groqKeyInput').value.trim();if(!key||!key.startsWith('gsk_')){toast('La key debe empezar con gsk_');return;}
   // M2: warn user about browser-side API key risk
-  toast('âš ï¸ Key activa (solo en memoria). No usar en redes no confiables.');
-  window._groqKey = key; // memory only â€” never persisteddocument.getElementById('aiKeyOk').classList.add('show');document.getElementById('groqKeyInput').value='';document.getElementById('groqKeyInput').placeholder='âœ“ Guardada';toast('API Key guardada âœ“');}
+  toast('⚠️ Key activa (solo en memoria). No usar en redes no confiables.');
+  window._groqKey = key; // memory only — never persisteddocument.getElementById('aiKeyOk').classList.add('show');document.getElementById('groqKeyInput').value='';document.getElementById('groqKeyInput').placeholder='✓ Guardada';toast('API Key guardada ✓');}
 function getGroqKey(){return window._groqKey || '';}
-function openAI(){document.getElementById('aiOverlay').classList.add('show');document.getElementById('moreWrap').classList.remove('open');resetAIReport();const key=getGroqKey();if(key){document.getElementById('aiKeyOk').classList.add('show');document.getElementById('groqKeyInput').placeholder='âœ“ Key configurada';}}
+function openAI(){document.getElementById('aiOverlay').classList.add('show');document.getElementById('moreWrap').classList.remove('open');resetAIReport();const key=getGroqKey();if(key){document.getElementById('aiKeyOk').classList.add('show');document.getElementById('groqKeyInput').placeholder='✓ Key configurada';}}
 function closeAI(){document.getElementById('aiOverlay').classList.remove('show');}
 function selectAIOpt(idx){aiOptSelected=idx;document.querySelectorAll('.ai-opt-card').forEach((el,i)=>el.classList.toggle('selected',i===idx));}
 function resetAIReport(){document.getElementById('aiReport').classList.remove('show');document.getElementById('aiReport').innerHTML='';document.getElementById('aiReportActions').style.display='none';document.getElementById('aiProgress').classList.remove('show');document.getElementById('aiGenBtn').style.display='block';lastReportText='';}
 function collectMeetingData(){
   const chatMsgs=[];
-  document.querySelectorAll('#chatMsgs .cmsg').forEach(el=>{const name=el.querySelector('.cn')?.textContent?.replace(/â†’.*$/,'').trim()||'';const text=el.querySelector('.ct')?.textContent||'';const time=el.querySelector('.ctm')?.textContent||'';if(name&&text)chatMsgs.push({name,text,time});});
+  document.querySelectorAll('#chatMsgs .cmsg').forEach(el=>{const name=el.querySelector('.cn')?.textContent?.replace(/→.*$/,'').trim()||'';const text=el.querySelector('.ct')?.textContent||'';const time=el.querySelector('.ctm')?.textContent||'';if(name&&text)chatMsgs.push({name,text,time});});
   const notes=document.getElementById('notesArea')?.value?.trim()||'';
   const participants=[myName,...[...(room?.remoteParticipants?.values()||[])].map(p=>p.identity)];
   const mins=Math.floor(meetSecs/60);const secs=meetSecs%60;
-  return{chatMsgs,notes,agenda:agendaText,participants,duration:`${mins}m ${secs}s`,docs:sharedDocs.map(d=>d.name),pollSummary:pollData?`Encuesta: "${pollData.q}" â€” ${pollData.opts.map((o,i)=>`${o}: ${pollData.votes[i]}`).join(', ')}. Total: ${pollData.total}`:''};
+  return{chatMsgs,notes,agenda:agendaText,participants,duration:`${mins}m ${secs}s`,docs:sharedDocs.map(d=>d.name),pollSummary:pollData?`Encuesta: "${pollData.q}" — ${pollData.opts.map((o,i)=>`${o}: ${pollData.votes[i]}`).join(', ')}. Total: ${pollData.total}`:''};
 }
 function buildPrompt(data,type){
   const{chatMsgs,notes,agenda,participants,duration,docs,pollSummary}=data;
   const chatStr=chatMsgs.length>0?chatMsgs.map(m=>`[${m.time}] ${m.name}: ${m.text}`).join('\n'):'(Sin mensajes)';
-  const context=`DATOS DE LA REUNIÃ“N:\n- Fecha: ${new Date().toLocaleString('es-ES')}\n- DuraciÃ³n: ${duration}\n- Participantes (${participants.length}): ${participants.join(', ')}\n${agenda?`- Agenda: ${agenda}\n`:''}${docs.length>0?`- Archivos: ${docs.join(', ')}\n`:''}${pollSummary?`- ${pollSummary}\n`:''}\nCHAT:\n${chatStr}\n${notes?`\nNOTAS:\n${notes}`:''}`.trim();
-  const prompts={0:`Eres un asistente ejecutivo experto. Analiza esta reuniÃ³n y genera un REPORTE GERENCIAL completo en espaÃ±ol con: 1.RESUMEN EJECUTIVO 2.DECISIONES TOMADAS 3.COMPROMISOS Y RESPONSABLES 4.TEMAS PENDIENTES 5.PRÃ“XIMOS PASOS 6.ANÃLISIS DE PARTICIPACIÃ“N 7.RIESGOS O ALERTAS. Usa Markdown. SÃ© directo y orientado a resultados.\n\n${context}`,1:`Eres un secretario ejecutivo experto. Genera una MINUTA EJECUTIVA formal en espaÃ±ol con: 1.ENCABEZADO 2.DESARROLLO 3.ACUERDOS 4.COMPROMISOS (tabla: Responsable|Tarea|Fecha) 5.TEMAS PRÃ“XIMA REUNIÃ“N 6.CIERRE. Markdown.\n\n${context}`,2:`Genera un RESUMEN RÃPIDO en espaÃ±ol para WhatsApp. Formato con emojis: fecha, duraciÃ³n, participantes, lo mÃ¡s importante, tareas acordadas, pendiente, siguiente paso. MÃ¡x 300 palabras.\n\n${context}`,3:`Extrae ÃšNICAMENTE los ACTION ITEMS. Clasifica: ðŸ”´ URGENTE ðŸŸ¡ IMPORTANTE ðŸŸ¢ SEGUIMIENTO â“ SIN RESPONSABLE. Para cada uno: tarea, responsable, deadline sugerido. Markdown.\n\n${context}`};
+  const context=`DATOS DE LA REUNIÓN:\n- Fecha: ${new Date().toLocaleString('es-ES')}\n- Duración: ${duration}\n- Participantes (${participants.length}): ${participants.join(', ')}\n${agenda?`- Agenda: ${agenda}\n`:''}${docs.length>0?`- Archivos: ${docs.join(', ')}\n`:''}${pollSummary?`- ${pollSummary}\n`:''}\nCHAT:\n${chatStr}\n${notes?`\nNOTAS:\n${notes}`:''}`.trim();
+  const prompts={0:`Eres un asistente ejecutivo experto. Analiza esta reunión y genera un REPORTE GERENCIAL completo en español con: 1.RESUMEN EJECUTIVO 2.DECISIONES TOMADAS 3.COMPROMISOS Y RESPONSABLES 4.TEMAS PENDIENTES 5.PRÓXIMOS PASOS 6.ANÁLISIS DE PARTICIPACIÓN 7.RIESGOS O ALERTAS. Usa Markdown. Sé directo y orientado a resultados.\n\n${context}`,1:`Eres un secretario ejecutivo experto. Genera una MINUTA EJECUTIVA formal en español con: 1.ENCABEZADO 2.DESARROLLO 3.ACUERDOS 4.COMPROMISOS (tabla: Responsable|Tarea|Fecha) 5.TEMAS PRÓXIMA REUNIÓN 6.CIERRE. Markdown.\n\n${context}`,2:`Genera un RESUMEN RÁPIDO en español para WhatsApp. Formato con emojis: fecha, duración, participantes, lo más importante, tareas acordadas, pendiente, siguiente paso. Máx 300 palabras.\n\n${context}`,3:`Extrae ÚNICAMENTE los ACTION ITEMS. Clasifica: 🔴 URGENTE 🟡 IMPORTANTE 🟢 SEGUIMIENTO ❓ SIN RESPONSABLE. Para cada uno: tarea, responsable, deadline sugerido. Markdown.\n\n${context}`};
   return prompts[type];
 }
 async function generateReport(){
   const key=getGroqKey();if(!key){toast('Configura tu Groq API Key primero');return;}
   const data=collectMeetingData();if(data.chatMsgs.length===0&&!data.notes&&!data.agenda){toast('No hay contenido para analizar');return;}
   document.getElementById('aiGenBtn').style.display='none';document.getElementById('aiProgress').classList.add('show');document.getElementById('aiReport').classList.remove('show');document.getElementById('aiReportActions').style.display='none';
-  const steps=['Recopilando datosâ€¦','Preparando contextoâ€¦','Enviando a Groqâ€¦','Analizando con LLaMA 3.3 70Bâ€¦','Generando reporteâ€¦'];let stepIdx=0;
+  const steps=['Recopilando datos…','Preparando contexto…','Enviando a Groq…','Analizando con LLaMA 3.3 70B…','Generando reporte…'];let stepIdx=0;
   const stepEl=document.getElementById('aiProgStep');const stepInt=setInterval(()=>{if(stepIdx<steps.length-1)stepEl.textContent=steps[++stepIdx];},1200);
   try{
-    const response=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'system',content:'Eres un asistente ejecutivo experto. Responde siempre en espaÃ±ol con formato Markdown claro.'},{role:'user',content:buildPrompt(data,aiOptSelected)}],temperature:0.3,max_tokens:2048})});
+    const response=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'system',content:'Eres un asistente ejecutivo experto. Responde siempre en español con formato Markdown claro.'},{role:'user',content:buildPrompt(data,aiOptSelected)}],temperature:0.3,max_tokens:2048})});
     clearInterval(stepInt);
     if(!response.ok){const err=await response.json();throw new Error(err.error?.message||'Error '+response.status);}
     const result=await response.json();
@@ -2170,20 +2170,20 @@ async function generateReport(){
     document.getElementById('aiProgress').classList.remove('show');
     const reportEl=document.getElementById('aiReport');
     const safeReport = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(lastReportText) : lastReportText;
-    reportEl.innerHTML=safeReport.replace(/^#{3}\s+(.+)$/gm,'<h3>$1</h3>').replace(/^#{2}\s+(.+)$/gm,'<h2>$1</h2>').replace(/^#{1}\s+(.+)$/gm,'<h2>$1</h2>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/^[-â€¢]\s+(.+)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>').replace(/<\/ul>\s*<ul>/g,'').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>');
+    reportEl.innerHTML=safeReport.replace(/^#{3}\s+(.+)$/gm,'<h3>$1</h3>').replace(/^#{2}\s+(.+)$/gm,'<h2>$1</h2>').replace(/^#{1}\s+(.+)$/gm,'<h2>$1</h2>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/^[-•]\s+(.+)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>').replace(/<\/ul>\s*<ul>/g,'').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>');
     reportEl.classList.add('show');
     document.getElementById('aiReportActions').style.display='flex';
-  }catch(e){clearInterval(stepInt);document.getElementById('aiProgress').classList.remove('show');document.getElementById('aiGenBtn').style.display='block';toast('âš ï¸ '+e.message);}
+  }catch(e){clearInterval(stepInt);document.getElementById('aiProgress').classList.remove('show');document.getElementById('aiGenBtn').style.display='block';toast('⚠️ '+e.message);}
 }
-function copyReport(){navigator.clipboard.writeText(lastReportText).then(()=>toast('Reporte copiado âœ“'));}
+function copyReport(){navigator.clipboard.writeText(lastReportText).then(()=>toast('Reporte copiado ✓'));}
 function downloadReport(){if(!lastReportText){toast('No hay reporte');return;}const types=['reporte-gerencial','minuta-ejecutiva','resumen-rapido','action-items'];dl(lastReportText,'nexmeet-'+types[aiOptSelected]+'-'+new Date().toISOString().slice(0,10)+'.txt','text/plain');}
 
-// â•â• UTILS â•â•
+// ══ UTILS ══
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
 function startTimer(){meetSecs=0;timerInt=setInterval(()=>{meetSecs++;const m=String(Math.floor(meetSecs/60)).padStart(2,'0');const s=String(meetSecs%60).padStart(2,'0');document.getElementById('mTimer').textContent=`${m}:${s}`;},1000);}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');}
 function dl(content,filename,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:mime}));a.download=filename;a.click();}
-function wDebug(msg){try{const el=document.getElementById('wDebug');if(el){const d=document.createElement('div');d.textContent=String(msg).slice(0,200);el.appendChild(d);}}catch(e){}}
+function wDebug(msg){const el=document.getElementById('wDebug');if(el){const d=document.createElement('div');d.textContent=new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' '+String(msg).slice(0,200);el.appendChild(d);}})+' '+msg+'<br>';console.log('[WR]',msg);}
 
 
 async function muteAll() {
@@ -2195,13 +2195,13 @@ async function muteAll() {
   }
   document.querySelectorAll('[data-muted]').forEach(btn => {
     btn.dataset.muteState = '1';
-    btn.textContent = 'ðŸ”Š Activar mic';
+    btn.textContent = '🔊 Activar mic';
   });
-  toast(`${participants.length} participantes silenciados ðŸ”‡`);
+  toast(`${participants.length} participantes silenciados 🔇`);
 }
 
 
-// â•â• DOC VIEWER â•â•
+// ══ DOC VIEWER ══
 let _currentDocId = null;
 
 async function showDoc(id) {
@@ -2210,7 +2210,7 @@ async function showDoc(id) {
   _currentDocId = id;
   const content = document.getElementById('docViewerContent');
   document.getElementById('docViewerName').textContent = doc.name;
-  content.innerHTML = '<div style="padding:2rem;text-align:center;color:#555">Cargandoâ€¦</div>';
+  content.innerHTML = '<div style="padding:2rem;text-align:center;color:#555">Cargando…</div>';
   document.getElementById('docViewer').classList.add('show');
 
   const ext = doc.name.split('.').pop().toLowerCase();
@@ -2267,7 +2267,7 @@ async function showDoc(id) {
         const ws = workbook.Sheets[shName];
         if (!ws) return;
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-        if (!rows || rows.length === 0) { html += '<p style="color:#999;font-size:.8rem">Hoja vacÃ­a</p>'; return; }
+        if (!rows || rows.length === 0) { html += '<p style="color:#999;font-size:.8rem">Hoja vacía</p>'; return; }
         html += '<table style="border-collapse:collapse;font-size:.8rem;margin-bottom:1rem">';
         rows.forEach((row, i) => {
           if (!Array.isArray(row)) return;
@@ -2286,10 +2286,10 @@ async function showDoc(id) {
 
     } else {
       content.innerHTML = `<div style="padding:2rem;text-align:center;color:#333">
-        <p style="font-size:2rem">ðŸ“„</p>
+        <p style="font-size:2rem">📄</p>
         <p style="font-weight:600">${esc(doc.name)}</p>
-        <p style="color:#666;font-size:.85rem">Este formato no tiene previsualizaciÃ³n.<br>DescÃ¡rgalo para abrirlo.</p>
-        <button onclick="dlDoc('${doc.id}')" style="margin-top:1rem;padding:.5rem 1.2rem;background:#0f6;border:none;border-radius:6px;cursor:pointer;font-weight:600">â¬‡ Descargar</button>
+        <p style="color:#666;font-size:.85rem">Este formato no tiene previsualización.<br>Descárgalo para abrirlo.</p>
+        <button onclick="dlDoc('${doc.id}')" style="margin-top:1rem;padding:.5rem 1.2rem;background:#0f6;border:none;border-radius:6px;cursor:pointer;font-weight:600">⬇ Descargar</button>
       </div>`;
     }
   } catch(e) {
@@ -2324,14 +2324,13 @@ async function shareDocScreen() {
   if (!_currentDocId) return;
   const doc = sharedDocs.find(d => d.id === _currentDocId);
   if (!doc) return;
-  // Only send docId + name â€” doc data already shared via doc-share event
+  // Only send docId + name — doc data already shared via doc-share event
   // LiveKit has ~15KB packet limit so we cannot include the file here
   await sendData({ type: 'show-doc', docId: _currentDocId, senderName: myName, docName: doc.name });
-  toast('Documento compartido en pantalla ðŸ“¡');
+  toast('Documento compartido en pantalla 📡');
 }
 
 
 </script>
 </body>
 </html>
-
