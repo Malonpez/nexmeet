@@ -1450,7 +1450,7 @@ function updateChatSel() {
 }
 
 // â•â• CHAT â•â•
-async async function sendChat() {
+async async async function sendChat() {
   const inp = document.getElementById('chatInput'); const msg = inp.value.trim(); if (!msg) return;
   inp.value = '';
   const sel = document.getElementById('chatTo'); const toId = sel.value;
