@@ -1596,7 +1596,7 @@ function toggleRec() {
 }
 
 // â•â• REACTIONS â•â•
-async async function sendReaction(emoji) {
+async async async function sendReaction(emoji) {
   const x = 20 + Math.random() * 60;
   showReaction(emoji, x);
   await sendData({type:'reaction',emoji,x});
