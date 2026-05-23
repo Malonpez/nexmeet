@@ -1399,8 +1399,12 @@ async function leaveRoom() {
   await room?.disconnect();
   clearInterval(timerInt);
   if (recorder && recorder.state !== 'inactive') recorder.stop();
-  history.replaceState(null, '', location.pathname + location.search);
-  location.reload();
+  if (sessionStorage.getItem('_wasInvited')) {
+    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0d0f14;color:#fff;font-family:sans-serif;flex-direction:column;gap:1rem"><h2>Reunion finalizada</h2><p>Gracias por participar.</p></div>';
+  } else {
+    history.replaceState(null,'',location.pathname);
+    location.reload();
+  }
 }
 
 // ══ PANELS ══
