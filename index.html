@@ -1450,7 +1450,7 @@ function updateChatSel() {
 }
 
 // ══ CHAT ══
-async async function sendChat() {
+async function sendChat() {
   const inp = document.getElementById('chatInput'); const msg = inp.value.trim(); if (!msg) return;
   inp.value = '';
   const sel = document.getElementById('chatTo'); const toId = sel.value;
@@ -1596,7 +1596,7 @@ function toggleRec() {
 }
 
 // ══ REACTIONS ══
-async async function sendReaction(emoji) {
+async function sendReaction(emoji) {
   const x = 20 + Math.random() * 60;
   showReaction(emoji, x);
   await sendData({type:'reaction',emoji,x});
