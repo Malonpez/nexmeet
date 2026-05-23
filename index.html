@@ -503,9 +503,9 @@ body.is-host .host-only { display: flex; }
           <div class="erow"><label>⏱ Válido por:</label>
             <select id="expirySelect" onchange="regenLink()">
               <option value="3600000">1 hora</option>
-              <option value="28800000" selected>8 horas</option>
-              <option value="86400000">24 horas</option>
-              <option value="604800000">7 días</option>
+              <option value="7200000" selected>2 horas</option>
+              <option value="14400000">4 horas</option>
+              <option value="21600000">6 horas</option>
             </select>
           </div>
           <a class="slink" id="shareLink" href="#" target="_blank" onclick="openInvLink(event)">…</a>
@@ -1400,7 +1400,7 @@ async function leaveRoom() {
   clearInterval(timerInt);
   if (recorder && recorder.state !== 'inactive') recorder.stop();
   if (sessionStorage.getItem('_wasInvited')) {
-    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0d0f14;color:#fff;font-family:sans-serif;flex-direction:column;gap:1rem"><h2>Reunion finalizada</h2><p>Gracias por participar.</p></div>';
+    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0d0f14;color:#fff;font-family:sans-serif;flex-direction:column;gap:1rem"><h2 style="font-size:2rem;margin-bottom:.5rem">Gracias por usar NexMeet</h2><p style="color:#aaa;font-size:1.1rem">Tu sesion ha finalizado.<br>Esperamos verte pronto.</p><p style="margin-top:2rem;font-size:.85rem;color:#555">Esta ventana puede cerrarse.</p></div>';
   } else {
     history.replaceState(null,'',location.pathname);
     location.reload();
